@@ -2,598 +2,574 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Tamil Islamic Podcast</title>
+    <title>Tamil Islamic Podcast</title>
 
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-  />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <link rel="stylesheet" href="style.css">
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
 <body>
 
-<div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-gray-50">
+        <!-- Topbar -->
+        <header
+            class="fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur">
+
+            <!-- Logo / Title -->
+            <div>
+
+                <p class="font-serif text-xl font-semibold text-gray-900">
+                    Tamil Islamic Podcast
+                </p>
+
+                <p class="text-xs text-gray-500">
+                    Learn • Listen • Reflect
+                </p>
+
+            </div>
 
 
-  <!-- =========================================================
+            <!-- Profile -->
+            <button
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-100">
+                U
+            </button>
+
+        </header>
+
+
+        <!-- =========================================================
        HOME
   ========================================================== -->
 
-  <section id="home" class="tab-content">
-
-    <!-- Topbar -->
-    <header
-      class="fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur"
-    >
-
-      <!-- Logo / Title -->
-      <div>
-
-        <p class="font-serif text-xl font-semibold text-gray-900">
-          Tamil Islamic Podcast
-        </p>
-
-        <p class="text-xs text-gray-500">
-          Learn • Listen • Reflect
-        </p>
-
-      </div>
+        <section id="home" class="tab-content">
 
 
-      <!-- Profile -->
-      <button
-        class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-100"
-      >
-        U
-      </button>
-
-    </header>
 
 
-    <!-- Home Content -->
-    <main class="px-5 pb-32 pt-28">
+            <!-- Home Content -->
+            <main class="px-5 pb-32 pt-28">
 
-      <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
-        Assalamu Alaikum
-      </h1>
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
+                    Assalamu Alaikum
+                </h1>
 
-      <p class="mt-2 text-gray-500">
-        Listen to Tamil Islamic lectures and Quran recitations.
-      </p>
-
-
-      <!-- Continue Listening -->
-      <div class="mt-8">
-
-        <h2 class="text-xl font-semibold text-gray-900">
-          Continue Listening
-        </h2>
+                <p class="mt-2 text-gray-500">
+                    Listen to Tamil Islamic lectures and Quran recitations.
+                </p>
 
 
+                <!-- Continue Listening -->
+               <div class="mt-8">
+
+    <h2 class="text-xl font-semibold text-gray-900">
+        Continue Listening
+    </h2>
+
+<div class="mt-4 flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+
+        <!-- Card 1 -->
         <div
-          class="mt-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+            class="flex h-60 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2 shadow-sm"
         >
+            <div
+                class="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-gray-100"
+            >
+                H
+            </div>
 
-          <p class="font-medium text-gray-900">
-            Daily Islamic Reminder
-          </p>
-
-          <p class="mt-1 text-sm text-gray-500">
-            Continue where you left off
-          </p>
-
+            <p class="mt-2 truncate px-1 text-sm font-medium text-gray-900">
+                Title
+            </p>
         </div>
 
-      </div>
 
-    </main>
+        <!-- Card 2 -->
+        <div
+            class="flex h-60 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2 shadow-sm"
+        >
+            <div
+                class="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-gray-100"
+            >
+                H
+            </div>
 
-  </section>
+            <p class="mt-2 truncate px-1 text-sm font-medium text-gray-900">
+                Title
+            </p>
+        </div>
+
+
+        <!-- Card 3 -->
+        <div
+            class="flex h-60 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2 shadow-sm"
+        >
+            <div
+                class="flex flex-1 items-center justify-center rounded-xl border border-gray-200 bg-gray-100"
+            >
+                H
+            </div>
+
+            <p class="mt-2 truncate px-1 text-sm font-medium text-gray-900">
+                Title
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+            </main>
+
+        </section>
 
 
 
-  <!-- =========================================================
+        <!-- =========================================================
        LIBRARY
   ========================================================== -->
 
-  <section id="library" class="tab-content hidden">
+        <section id="library" class="tab-content hidden">
 
-    <main class="px-5 pb-32 pt-28">
+            <main class="px-5 pb-32 pt-28">
 
-      <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
-        Library
-      </h1>
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
+                    Library
+                </h1>
 
-      <p class="mt-2 text-gray-500">
-        Your saved Islamic content.
-      </p>
+                <p class="mt-2 text-gray-500">
+                    Your saved Islamic content.
+                </p>
 
 
-      <!-- Empty Library -->
-      <div
-        class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 text-center"
-      >
+                <!-- Empty Library -->
+                <div class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 text-center">
 
-        <i class="fa-solid fa-book text-3xl text-gray-400"></i>
+                    <i class="fa-solid fa-book text-3xl text-gray-400"></i>
 
-        <p class="mt-4 font-medium text-gray-900">
-          Your Library is Empty
-        </p>
+                    <p class="mt-4 font-medium text-gray-900">
+                        Your Library is Empty
+                    </p>
 
-        <p class="mt-1 text-sm text-gray-500">
-          Save lectures and podcasts to find them here.
-        </p>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Save lectures and podcasts to find them here.
+                    </p>
 
-      </div>
+                </div>
 
-    </main>
+            </main>
 
-  </section>
+        </section>
 
 
 
-  <!-- =========================================================
+        <!-- =========================================================
        BROWSE
   ========================================================== -->
 
-  <section id="browse" class="tab-content hidden">
+        <section id="browse" class="tab-content hidden">
 
-    <main class="px-5 pb-32 pt-28">
+            <main class="px-5 pb-32 pt-28">
 
-      <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
-        Browse
-      </h1>
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
+                    Browse
+                </h1>
 
-      <p class="mt-2 text-gray-500">
-        Explore Islamic content by category.
-      </p>
-
-
-      <!-- Categories -->
-      <div class="mt-8 grid grid-cols-2 gap-4">
+                <p class="mt-2 text-gray-500">
+                    Explore Islamic content by category.
+                </p>
 
 
-        <!-- Bayans -->
-        <div
-          class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
-
-          <i class="fa-solid fa-microphone text-xl"></i>
-
-          <p class="mt-3 font-medium">
-            Bayans
-          </p>
-
-        </div>
+                <!-- Categories -->
+                <div class="mt-8 grid grid-cols-2 gap-4">
 
 
-        <!-- Quran -->
-        <div
-          class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
+                    <!-- Bayans -->
+                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
-          <i class="fa-solid fa-book-quran text-xl"></i>
+                        <i class="fa-solid fa-microphone text-xl"></i>
 
-          <p class="mt-3 font-medium">
-            Quran
-          </p>
+                        <p class="mt-3 font-medium">
+                            Bayans
+                        </p>
 
-        </div>
+                    </div>
 
 
-        <!-- Education -->
-        <div
-          class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
+                    <!-- Quran -->
+                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
-          <i class="fa-solid fa-graduation-cap text-xl"></i>
+                        <i class="fa-solid fa-book-quran text-xl"></i>
 
-          <p class="mt-3 font-medium">
-            Education
-          </p>
+                        <p class="mt-3 font-medium">
+                            Quran
+                        </p>
 
-        </div>
+                    </div>
 
 
-        <!-- Speakers -->
-        <div
-          class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
-        >
+                    <!-- Education -->
+                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
-          <i class="fa-solid fa-users text-xl"></i>
+                        <i class="fa-solid fa-graduation-cap text-xl"></i>
 
-          <p class="mt-3 font-medium">
-            Speakers
-          </p>
+                        <p class="mt-3 font-medium">
+                            Education
+                        </p>
 
-        </div>
+                    </div>
 
-      </div>
 
-    </main>
+                    <!-- Speakers -->
+                    <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
 
-  </section>
+                        <i class="fa-solid fa-users text-xl"></i>
+
+                        <p class="mt-3 font-medium">
+                            Speakers
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </section>
 
 
 
-  <!-- =========================================================
+        <!-- =========================================================
        QURAN
   ========================================================== -->
 
-  <section id="quran" class="tab-content hidden">
+        <section id="quran" class="tab-content hidden">
 
-    <main class="px-5 pb-32 pt-28">
+            <main class="px-5 pb-32 pt-28">
 
-      <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
-        Quran
-      </h1>
+                <h1 class="text-3xl font-semibold tracking-tight text-gray-900">
+                    Quran
+                </h1>
 
-      <p class="mt-2 text-gray-500">
-        Listen to Quran recitations.
-      </p>
-
-
-      <!-- Quran Card -->
-      <div
-        class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
-      >
-
-        <div class="flex items-center gap-4">
+                <p class="mt-2 text-gray-500">
+                    Listen to Quran recitations.
+                </p>
 
 
-          <!-- Icon -->
-          <div
-            class="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-900 text-white"
-          >
+                <!-- Quran Card -->
+                <div class="mt-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
 
-            <i class="fa-solid fa-book-quran text-xl"></i>
-
-          </div>
+                    <div class="flex items-center gap-4">
 
 
-          <!-- Content -->
-          <div>
+                        <!-- Icon -->
+                        <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-900 text-white">
 
-            <p class="font-semibold text-gray-900">
-              Quran Recitations
-            </p>
+                            <i class="fa-solid fa-book-quran text-xl"></i>
 
-            <p class="text-sm text-gray-500">
-              Listen and reflect
-            </p>
+                        </div>
 
-          </div>
+
+                        <!-- Content -->
+                        <div>
+
+                            <p class="font-semibold text-gray-900">
+                                Quran Recitations
+                            </p>
+
+                            <p class="text-sm text-gray-500">
+                                Listen and reflect
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </section>
+
+
+        <div id="mini-player"
+            class="fixed inset-x-10 bottom-23 z-40 flex items-center justify-between rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg">
+
+            <!-- Track Information -->
+            <div class="flex min-w-0 items-center gap-3">
+
+                <!-- Artwork -->
+                <div
+                    class="flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 bg-gray-500">
+                    I
+                </div>
+
+
+                <!-- Title / Scholar -->
+                <div class="min-w-0">
+
+                    <p class="truncate text-md font-semibold text-gray-900">
+                        Title
+                    </p>
+
+                    <p class="truncate text-xs text-gray-500">
+                        Scholar
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Player Controls -->
+            <div class="flex shrink-0 items-center gap-4 mr-5">
+
+                <button class="text-gray-600 transition hover:text-gray-900" aria-label="Previous">
+                    <i class="fa-solid fa-backward-step"></i>
+                </button>
+
+
+                <button
+                    class="flex size-10 items-center justify-center rounded-full bg-gray-900 text-white transition hover:bg-gray-700"
+                    aria-label="Play or pause">
+                    <i class="fa-solid fa-play"></i>
+                </button>
+
+
+                <button class="text-gray-600 transition hover:text-gray-900" aria-label="Next">
+                    <i class="fa-solid fa-forward-step"></i>
+                </button>
+
+            </div>
 
         </div>
 
-      </div>
-
-    </main>
-
-  </section>
 
 
-<div
-  id="mini-player"
-  class="fixed inset-x-5 bottom-25 z-40 flex items-center justify-between rounded-4xl border border-gray-200 bg-white px-4 py-3 shadow-lg"
->
-
-  <!-- Track Information -->
-  <div class="flex min-w-0 items-center gap-3">
-
-    <!-- Artwork -->
-    <div
-      class="flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 bg-gray-500"
-    >
-      I
-    </div>
-
-
-    <!-- Title / Scholar -->
-    <div class="min-w-0">
-
-      <p class="truncate text-md font-semibold text-gray-900">
-        Title
-      </p>
-
-      <p class="truncate text-xs text-gray-500">
-        Scholar
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- Player Controls -->
-  <div class="flex shrink-0 items-center gap-4 mr-5">
-
-    <button
-      class="text-gray-600 transition hover:text-gray-900"
-      aria-label="Previous"
-    >
-      <i class="fa-solid fa-backward-step"></i>
-    </button>
-
-
-    <button
-      class="flex size-10 items-center justify-center rounded-full bg-gray-900 text-white transition hover:bg-gray-700"
-      aria-label="Play or pause"
-    >
-      <i class="fa-solid fa-play"></i>
-    </button>
-
-
-    <button
-      class="text-gray-600 transition hover:text-gray-900"
-      aria-label="Next"
-    >
-      <i class="fa-solid fa-forward-step"></i>
-    </button>
-
-  </div>
-
-</div>
-
-
-
-  <!-- =========================================================
+        <!-- =========================================================
        BOTTOM NAVIGATION
   ========================================================== -->
 
-  <nav
-    class="fixed inset-x-5 bottom-3 z-50 flex items-center justify-between rounded-full border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur"
-  >
+        <nav
+            class="fixed inset-x-5 bottom-3 z-50 flex items-center justify-between rounded-full border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur">
 
 
-    <!-- =====================================================
+            <!-- =====================================================
          HOME BUTTON
     ====================================================== -->
 
-    <button
-      data-tab="home"
-      class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full bg-gray-900 px-5 py-3 text-white transition"
-    >
+            <button data-tab="home"
+                class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full bg-gray-900 px-5 py-3 text-white transition">
 
-      <i class="fa-solid fa-house text-base"></i>
+                <i class="fa-solid fa-house text-base"></i>
 
-      <span class="text-xs font-medium">
-        Home
-      </span>
+                <span class="text-xs font-medium">
+                    Home
+                </span>
 
-    </button>
+            </button>
 
 
 
-    <!-- =====================================================
+            <!-- =====================================================
          LIBRARY BUTTON
     ====================================================== -->
 
-    <button
-      data-tab="library"
-      class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    >
+            <button data-tab="library"
+                class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
 
-      <i class="fa-solid fa-book text-base"></i>
+                <i class="fa-solid fa-book text-base"></i>
 
-      <span class="text-xs font-medium">
-        Library
-      </span>
+                <span class="text-xs font-medium">
+                    Library
+                </span>
 
-    </button>
+            </button>
 
 
 
-    <!-- =====================================================
+            <!-- =====================================================
          BROWSE BUTTON
     ====================================================== -->
 
-    <button
-      data-tab="browse"
-      class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    >
+            <button data-tab="browse"
+                class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
 
-      <i class="fa-solid fa-compass text-base"></i>
+                <i class="fa-solid fa-compass text-base"></i>
 
-      <span class="text-xs font-medium">
-        Browse
-      </span>
+                <span class="text-xs font-medium">
+                    Browse
+                </span>
 
-    </button>
+            </button>
 
 
 
-    <!-- =====================================================
+            <!-- =====================================================
          QURAN BUTTON
     ====================================================== -->
 
-    <button
-      data-tab="quran"
-      class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    >
+            <button data-tab="quran"
+                class="tab-button flex min-w-20 flex-col items-center gap-1 rounded-full px-5 py-3 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900">
 
-      <i class="fa-solid fa-book-quran text-base"></i>
+                <i class="fa-solid fa-book-quran text-base"></i>
 
-      <span class="text-xs font-medium">
-        Quran
-      </span>
+                <span class="text-xs font-medium">
+                    Quran
+                </span>
 
-    </button>
+            </button>
 
-  </nav>
+        </nav>
 
-</div>
+    </div>
 
 
 
-<!-- =========================================================
+    <!-- =========================================================
      TAB SWITCHING JAVASCRIPT
 ========================================================== -->
 
-<script>
+    <script>
 
-  /*
-   * Get all navigation buttons
-   */
-  const tabButtons = document.querySelectorAll(".tab-button");
-
-
-  /*
-   * Get all tab sections
-   */
-  const tabContents = document.querySelectorAll(".tab-content");
+        /*
+         * Get all navigation buttons
+         */
+        const tabButtons = document.querySelectorAll(".tab-button");
 
 
-
-  /*
-   * Switch between tabs
-   */
-  function switchTab(tabName) {
-
-
-    /*
-     * ---------------------------------------------
-     * Hide all tab contents
-     * ---------------------------------------------
-     */
-
-    tabContents.forEach((content) => {
-
-      content.classList.add("hidden");
-
-    });
+        /*
+         * Get all tab sections
+         */
+        const tabContents = document.querySelectorAll(".tab-content");
 
 
+        /*
+         * Switch between tabs
+         */
+        function switchTab(tabName) {
 
-    /*
-     * ---------------------------------------------
-     * Show selected tab
-     * ---------------------------------------------
-     */
-
-    const selectedTab = document.getElementById(tabName);
-
-    if (selectedTab) {
-
-      selectedTab.classList.remove("hidden");
-
-    }
+            /*
+             * Hide all tab contents
+             */
+            tabContents.forEach((content) => {
+                content.classList.add("hidden");
+            });
 
 
+            /*
+             * Show selected tab
+             */
+            const selectedTab = document.getElementById(tabName);
 
-    /*
-     * ---------------------------------------------
-     * Reset navigation buttons
-     * ---------------------------------------------
-     */
-
-    tabButtons.forEach((button) => {
-
-      /*
-       * Remove active styles
-       */
-      button.classList.remove(
-        "bg-gray-900",
-        "text-white"
-      );
+            if (selectedTab) {
+                selectedTab.classList.remove("hidden");
+            }
 
 
-      /*
-       * Add inactive text color
-       */
-      button.classList.add(
-        "text-gray-500"
-      );
+            /*
+             * Reset all navigation buttons
+             */
+            tabButtons.forEach((button) => {
 
-    });
+                button.classList.remove(
+                    "bg-gray-900",
+                    "text-white"
+                );
 
+                button.classList.add(
+                    "text-gray-500"
+                );
 
-
-    /*
-     * ---------------------------------------------
-     * Find active navigation button
-     * ---------------------------------------------
-     */
-
-    const activeButton = document.querySelector(
-      `[data-tab="${tabName}"]`
-    );
+            });
 
 
-
-    /*
-     * ---------------------------------------------
-     * Apply active styles
-     * ---------------------------------------------
-     */
-
-    if (activeButton) {
-
-      /*
-       * Remove inactive color
-       */
-      activeButton.classList.remove(
-        "text-gray-500"
-      );
+            /*
+             * Find active navigation button
+             */
+            const activeButton = document.querySelector(
+                `[data-tab="${tabName}"]`
+            );
 
 
-      /*
-       * Add active color
-       */
-      activeButton.classList.add(
-        "bg-gray-900",
-        "text-white"
-      );
+            /*
+             * Update active button
+             * and mini-player visibility
+             */
+            if (activeButton) {
 
-    }
-
-  }
+                const miniPlayer = document.getElementById("mini-player");
 
 
+                /*
+                 * Hide mini-player on Quran
+                 */
+                if (activeButton.dataset.tab === "quran") {
 
-  /*
-   * ---------------------------------------------
-   * Add click events
-   * ---------------------------------------------
-   */
+                    miniPlayer.classList.add("hidden");
 
-  tabButtons.forEach((button) => {
+                } else {
 
-    button.addEventListener("click", () => {
+                    /*
+                     * Show mini-player on
+                     * Home, Library and Browse
+                     */
+                    miniPlayer.classList.remove("hidden");
 
-      /*
-       * Get tab name from data-tab
-       */
-      const tabName = button.dataset.tab;
-
-
-      /*
-       * Switch tab
-       */
-      switchTab(tabName);
-
-    });
-
-  });
+                }
 
 
+                /*
+                 * Remove inactive color
+                 */
+                activeButton.classList.remove(
+                    "text-gray-500"
+                );
 
-  /*
-   * ---------------------------------------------
-   * Default tab
-   * ---------------------------------------------
-   */
 
-  switchTab("home");
+                /*
+                 * Add active color
+                 */
+                activeButton.classList.add(
+                    "bg-gray-900",
+                    "text-white"
+                );
 
-</script>
+            }
+
+        }
+
+
+        /*
+         * Add click events
+         */
+        tabButtons.forEach((button) => {
+
+            button.addEventListener("click", () => {
+
+                const tabName = button.dataset.tab;
+
+                switchTab(tabName);
+
+            });
+
+        });
+
+
+        /*
+         * Default tab
+         */
+        switchTab("home");
+
+    </script>
 
 </body>
+
 </html>
