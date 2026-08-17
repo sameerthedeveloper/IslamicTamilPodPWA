@@ -36,6 +36,16 @@ export class EpisodesController {
     return this.episodesService.findAll(page, limit);
   }
 
+  @Get('admin')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  findAllAdmin(
+    @Query('page') page = 1,
+    @Query('limit') limit = 50,
+  ) {
+    return this.episodesService.findAllAdmin(page, limit);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.episodesService.findOne(id);

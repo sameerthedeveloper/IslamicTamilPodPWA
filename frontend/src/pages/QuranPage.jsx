@@ -1,7 +1,19 @@
-import React from 'react'
-import { Book } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 import QuranCard from '../components/QuranCards/QuranCard'
+import { getQuranRecitations } from '../api/client'
+import { usePlayerStore } from '../store/playerStore'
+
 function QuranPage() {
+  const [recitations, setRecitations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const play = usePlayerStore((s) => s.play)
+
+  useEffect(() => {
+    getQuranRecitations()
+      .then(setRecitations)
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <main className="px-5 pb-52 pt-28">
 
@@ -13,46 +25,21 @@ function QuranPage() {
                     Listen to Quran recitations.
                 </p>
 
+                {loading && (
+                    <p className="mt-8 text-sm text-gray-500">Loading...</p>
+                )}
 
-
-                {/* <div className="sticky top-25 mt-8 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl">
-
-                    <div className="flex items-center gap-4">
-
-
-
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-900 text-white">
-
-                            <Book/>
-
-                        </div>
-
-
-
-                        <div>
-
-                            <p className="font-semibold text-gray-900">
-                                Quran Recitations
-                            </p>
-
-                            <p className="text-sm text-gray-500">
-                                Listen and reflect
-                            </p>
-
-                        </div>
-
+                {!loading && recitations.length === 0 && (
+                    <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 text-center">
+                        <p className="text-sm text-gray-500">No recitations available yet.</p>
                     </div>
+                )}
 
-                </div> */}
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-                <QuranCard title="Al-Fathiha" subtitle="The Begining"/>
-
+                {!loading && recitations.map((r) => (
+                    <div key={r.id} onClick={() => play(r)} className="cursor-pointer">
+                        <QuranCard title={r.title} subtitle={r.scholar?.name} />
+                    </div>
+                ))}
 
             </main>
   )

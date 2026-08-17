@@ -41,6 +41,7 @@ model Scholar {
   // Relations
   episodes Episode[]
   series   Series[]
+  rights   Rights[]
 
   @@index([slug])
 }
@@ -194,6 +195,22 @@ model Featured {
 
   @@index([position])
   @@index([featuredUntil])
+}
+
+model Rights {
+  id            Int       @id @default(autoincrement())
+  owner         String
+  scholarId     Int
+  status        String    @default("PENDING") // PENDING | AUTHORIZED | EXPIRING | EXPIRED | REVOKED
+  licenseExpiry DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  scholar Scholar @relation(fields: [scholarId], references: [id], onDelete: Cascade)
+
+  @@index([scholarId])
+  @@index([status])
 }
 
 model SystemSettings {

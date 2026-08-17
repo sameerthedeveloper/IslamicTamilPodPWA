@@ -1,10 +1,14 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(helmet());
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -18,9 +22,11 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS — explicit origin whitelist, comma-separated in CORS_ORIGINS.
+  // Dev falls back to "*" only when CORS_ORIGINS is unset.
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map((o) => o.trim());
   app.enableCors({
-    origin: process.env.NODE_ENV === 'development' ? '*' : [],
+    origin: corsOrigins ?? (process.env.NODE_ENV === 'development' ? '*' : []),
     credentials: true,
   });
 
@@ -38,6 +44,8 @@ async function bootstrap() {
     .addTag('User')
     .addTag('Search')
     .addTag('Home')
+    .addTag('Admin')
+    .addTag('Audio')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

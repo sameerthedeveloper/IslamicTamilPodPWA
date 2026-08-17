@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
+import { PrismaService } from '@/common/prisma/prisma.service';
 import { slugify } from '@/common/utils/slugify';
 
 @Injectable()
@@ -24,6 +24,13 @@ export class ScholarsService {
     });
   }
 
+  async findAllAdmin() {
+    return this.prisma.scholar.findMany({
+      orderBy: { updatedAt: 'desc' },
+      include: { episodes: { take: 3 } },
+    });
+  }
+
   async findBySlug(slug: string) {
     return this.prisma.scholar.findUnique({
       where: { slug },
@@ -36,5 +43,9 @@ export class ScholarsService {
       where: { id },
       data,
     });
+  }
+
+  async remove(id: number) {
+    return this.prisma.scholar.delete({ where: { id } });
   }
 }

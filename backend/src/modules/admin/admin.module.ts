@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
+import { AdminController } from './admin.controller';
+import { RightsController } from './rights.controller';
+import { FeaturedController } from './featured.controller';
+import { SettingsController } from './settings.controller';
 
-// TODO: Phase 3 - Admin dashboard APIs
-// - Dashboard stats endpoint
-// - User management
-// - Rights/licensing management
-// - Featured content management
-// - System settings management
-
-@Module({})
+@Module({
+  controllers: [AdminController, RightsController, FeaturedController, SettingsController],
+})
 export class AdminModule {}

@@ -1,18 +1,34 @@
 import React from 'react'
-import { Play,FastForwardIcon,RewindIcon } from 'lucide-react'
+import { Play, Pause, FastForwardIcon, RewindIcon } from 'lucide-react'
+import { usePlayerStore } from '../store/playerStore'
 
 function MiniPlayer() {
+    const currentEpisode = usePlayerStore((s) => s.currentEpisode)
+    const isPlaying = usePlayerStore((s) => s.isPlaying)
+    const togglePlay = usePlayerStore((s) => s.togglePlay)
+    const next = usePlayerStore((s) => s.next)
+    const prev = usePlayerStore((s) => s.prev)
+    const openPlayer = usePlayerStore((s) => s.openPlayer)
+
+    if (!currentEpisode) return null
+
     return (
         <div id="mini-player"
             className="fixed inset-x-10 bottom-24 z-40 flex items-center justify-between rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg">
 
 
-            <div className="flex min-w-0 items-center gap-3">
+            <div
+                onClick={openPlayer}
+                className="flex min-w-0 items-center gap-3 cursor-pointer">
 
 
                 <div
-                    className="flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 bg-gray-500">
-                    I
+                    className="flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 bg-gray-500 overflow-hidden">
+                    {currentEpisode.thumbnail ? (
+                        <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                        currentEpisode.title?.[0] ?? 'I'
+                    )}
                 </div>
 
 
@@ -20,11 +36,11 @@ function MiniPlayer() {
                 <div className="min-w-0">
 
                     <p className="truncate text-md font-semibold text-gray-900">
-                        Title
+                        {currentEpisode.title ?? 'Title'}
                     </p>
 
                     <p className="truncate text-xs text-gray-500">
-                        Scholar
+                        {currentEpisode.scholar?.name ?? 'Scholar'}
                     </p>
 
                 </div>
@@ -35,20 +51,21 @@ function MiniPlayer() {
 
             <div className="flex shrink-0 items-center gap-4 mr-5">
 
-                <button className="text-gray-600 transition hover:text-gray-900" aria-label="Previous">
+                <button onClick={(e) => { e.stopPropagation(); prev() }} className="text-gray-600 transition hover:text-gray-900" aria-label="Previous">
 
                     <RewindIcon size={18} strokeWidth={3}/>
                 </button>
 
 
                 <button
+                    onClick={(e) => { e.stopPropagation(); togglePlay() }}
                     className="flex size-10 items-center justify-center rounded-full bg-gray-900 text-white transition hover:bg-gray-700"
                     aria-label="Play or pause">
-                    <Play size={18} strokeWidth={3}/>
+                    {isPlaying ? <Pause size={18} strokeWidth={3}/> : <Play size={18} strokeWidth={3}/>}
                 </button>
 
 
-                <button className="text-gray-600 transition hover:text-gray-900" aria-label="Next">
+                <button onClick={(e) => { e.stopPropagation(); next() }} className="text-gray-600 transition hover:text-gray-900" aria-label="Next">
                     <FastForwardIcon size={18} strokeWidth={3} />
                 </button>
 
