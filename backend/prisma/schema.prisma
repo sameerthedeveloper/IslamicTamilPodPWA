@@ -1,0 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  passwordHash    String
+  role            String    @default("USER") // USER | ADMIN
+  avatar          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  listeningHistory   ListeningHistory[]
+  listeningProgress  ListeningProgress[]
+  bookmarks          Bookmark[]
+
+  @@index([email])
+}
+
+model Scholar {
+  id        Int     @id @default(autoincrement())
+  name      String
+  slug      String  @unique
+  biography String?
+  image     String?
+  status    String  @default("ACTIVE") // ACTIVE | INACTIVE | ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  episodes Episode[]
+  series   Series[]
+
+  @@index([slug])
+}
+
+model Topic {
+  id        Int    @id @default(autoincrement())
+  name      String @unique
+  createdAt DateTime @default(now())
+
+  // Relations
+  episodes EpisodeTopic[]
+
+  @@index([name])
+}
+
+model Series {
+  id          Int     @id @default(autoincrement())
+  title       String
+  slug        String  @unique
+  description String?
+  thumbnail   String?
+  scholarId   Int
+  status      String  @default("DRAFT") // DRAFT | PUBLISHED | UNPUBLISHED | ARCHIVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  scholar Scholar @relation(fields: [scholarId], references: [id], onDelete: Cascade)
+  episodes Episode[]
+
+  @@index([scholarId])
+  @@index([slug])
+}
+
+model Episode {
+  id          Int     @id @default(autoincrement())
+  title       String
+  slug        String  @unique
+  description String?
+  duration    Int?    // in seconds
+  thumbnail   String?
+  status      String  @default("DRAFT") // DRAFT | PROCESSING | READY | PUBLISHED | UNPUBLISHED
+  publishedAt DateTime?
+  scholarId   Int
+  seriesId    Int?
+  viewCount   Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  scholar    Scholar      @relation(fields: [scholarId], references: [id], onDelete: Cascade)
+  series     Series?      @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  topics     EpisodeTopic[]
+  audioAsset AudioAsset?
+  listeningHistory   ListeningHistory[]
+  listeningProgress  ListeningProgress[]
+  bookmarks          Bookmark[]
+
+  @@index([scholarId])
+  @@index([seriesId])
+  @@index([slug])
+  @@index([publishedAt])
+  @@index([status])
+}
+
+model EpisodeTopic {
+  episodeId Int
+  topicId   Int
+
+  // Relations
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  topic   Topic   @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@id([episodeId, topicId])
+  @@index([topicId])
+}
+
+model AudioAsset {
+  id          Int     @id @default(autoincrement())
+  episodeId   Int     @unique
+  storageKey  String  // path in MinIO/S3
+  format      String  @default("mp3")
+  bitrate     Int     @default(128)
+  duration    Int?    // in seconds
+  fileSize    Int?    // in bytes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@index([episodeId])
+}
+
+model ListeningHistory {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  episodeId Int
+  listenedAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId])
+  @@index([episodeId])
+  @@index([listenedAt])
+}
+
+model ListeningProgress {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  episodeId        Int
+  positionSeconds  Int       @default(0)
+  durationSeconds  Int
+  completed        Boolean   @default(false)
+  lastPlayedAt     DateTime  @default(now()) @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId])
+  @@index([episodeId])
+}
+
+model Bookmark {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  episodeId Int
+  createdAt DateTime  @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId])
+  @@index([episodeId])
+}
+
+model Featured {
+  id        Int       @id @default(autoincrement())
+  episodeId Int
+  position  Int       @default(0)
+  featuredUntil DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([position])
+  @@index([featuredUntil])
+}
+
+model SystemSettings {
+  id                 Int     @id @default(autoincrement())
+  siteName           String  @default("Tamil Islamic Audio")
+  siteDescription    String  @default("Listen to Islamic audio content")
+  defaultBitrate     Int     @default(128)
+  maxUploadSize      Int     @default(314572800) // 300MB in bytes
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
