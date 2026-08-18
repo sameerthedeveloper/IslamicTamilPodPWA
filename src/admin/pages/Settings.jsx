@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
+import { Check, RotateCcw } from 'lucide-react'
 import TopBar from '../components/TopBar'
 import { settingsApi } from '../api/client'
+import { useAdminUiStore } from '../store/uiStore'
+import { NAV_ITEMS, BOTTOM_NAV_MAX } from '../navConfig'
 
 function Settings() {
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const bottomNavKeys = useAdminUiStore((s) => s.bottomNavKeys)
+  const toggleBottomNavKey = useAdminUiStore((s) => s.toggleBottomNavKey)
+  const resetBottomNavKeys = useAdminUiStore((s) => s.resetBottomNavKeys)
+  const atMax = bottomNavKeys.length >= BOTTOM_NAV_MAX
 
   useEffect(() => {
     settingsApi.get().then(setForm)
@@ -62,6 +69,46 @@ function Settings() {
             </div>
           </form>
         )}
+
+        <div className="mt-6 rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>Quick nav (mobile)</h2>
+            <button
+              type="button"
+              onClick={resetBottomNavKeys}
+              className="flex items-center gap-1.5 text-xs font-medium"
+              style={{ color: 'var(--muted)' }}
+            >
+              <RotateCcw size={12} /> Reset
+            </button>
+          </div>
+          <p className="mb-4 text-xs" style={{ color: 'var(--muted)' }}>
+            Pick up to {BOTTOM_NAV_MAX} shortcuts for the bottom bar shown on phones.
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {NAV_ITEMS.map(({ key, label, icon: Icon }) => {
+              const selected = bottomNavKeys.includes(key)
+              const disabled = !selected && atMax
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => toggleBottomNavKey(key)}
+                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors disabled:opacity-40"
+                  style={{
+                    background: selected ? 'var(--accent-soft)' : 'var(--base)',
+                    color: selected ? 'var(--accent)' : 'var(--ink)',
+                  }}
+                >
+                  <Icon size={16} strokeWidth={2.25} />
+                  <span className="flex-1 truncate">{label}</span>
+                  {selected && <Check size={14} />}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </main>
     </>
   )

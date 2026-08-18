@@ -12,10 +12,6 @@ export const useAdminUiStore = create(
       closeSidebar: () => set({ sidebarOpen: false }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
-      customizeOpen: false,
-      openCustomize: () => set({ customizeOpen: true }),
-      closeCustomize: () => set({ customizeOpen: false }),
-
       bottomNavKeys: DEFAULT_BOTTOM_NAV_KEYS,
       toggleBottomNavKey: (key) =>
         set((s) => {
