@@ -21,7 +21,7 @@ function ProtectedRoute() {
   return (
     <div>
       <Sidebar />
-      <div className="ml-60 min-h-screen">
+      <div className="min-h-screen lg:ml-60">
         <Outlet />
       </div>
     </div>

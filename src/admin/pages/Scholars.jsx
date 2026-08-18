@@ -48,7 +48,7 @@ function Scholars() {
   return (
     <>
       <TopBar crumb="Content" title="Scholars" />
-      <main className="px-8 py-6">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <div className="mb-4 flex justify-end">
           <button
             onClick={openCreate}
@@ -70,7 +70,7 @@ function Scholars() {
             <p className="text-sm" style={{ color: 'var(--muted)' }}>No scholars yet.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {scholars.map((s) => (
               <div key={s.id} className="rounded-2xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
                 <div className="flex h-24 items-center justify-center rounded-xl" style={{ background: 'var(--base)' }}>

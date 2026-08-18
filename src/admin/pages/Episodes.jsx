@@ -128,7 +128,7 @@ function Episodes() {
   return (
     <>
       <TopBar crumb="Content" title="Episodes" />
-      <main className="px-8 py-6">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <div className="mb-4 flex justify-end">
           <button
             onClick={openCreate}

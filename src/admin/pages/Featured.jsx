@@ -51,7 +51,7 @@ function Featured() {
   return (
     <>
       <TopBar crumb="Content" title="Featured" />
-      <main className="max-w-2xl px-8 py-6">
+      <main className="max-w-2xl px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         <div className="mb-4 flex justify-end">
           <button onClick={() => setModalOpen(true)} className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> Add episode

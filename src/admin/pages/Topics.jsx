@@ -31,7 +31,7 @@ function Topics() {
   return (
     <>
       <TopBar crumb="Content" title="Topics" />
-      <main className="px-8 py-6 max-w-xl">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-6 max-w-xl">
         <form onSubmit={add} className="mb-6 flex gap-2">
           <input
             value={name}

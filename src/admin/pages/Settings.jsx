@@ -32,7 +32,7 @@ function Settings() {
   return (
     <>
       <TopBar crumb="System" title="Settings" />
-      <main className="max-w-lg px-8 py-6">
+      <main className="max-w-lg px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         {!form ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : (

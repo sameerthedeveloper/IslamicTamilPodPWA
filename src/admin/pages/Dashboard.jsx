@@ -24,12 +24,12 @@ function Dashboard() {
   return (
     <>
       <TopBar crumb="Overview" title="Dashboard" />
-      <main className="px-8 py-6">
+      <main className="px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
         {loading ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : (
           <>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <StatCard label="Episodes" value={stats?.episodes ?? 0} icon={Mic2} />
               <StatCard label="Scholars" value={stats?.scholars ?? 0} icon={Users2} />
               <StatCard label="Users" value={stats?.users ?? 0} icon={UsersRound} />
