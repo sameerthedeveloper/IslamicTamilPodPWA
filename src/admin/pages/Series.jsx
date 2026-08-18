@@ -107,7 +107,7 @@ function Series() {
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Thumbnail</label>
           <ImageUpload value={null} onChange={() => {}} />
-          <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>Preview only — not wired to backend yet.</p>
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>Preview only — not wired to Storage yet.</p>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Status</label>

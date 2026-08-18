@@ -1,5 +1,9 @@
 # Backend Build: Phase 0 Complete ✅
 
+> **Not in use.** The app (repo root) migrated to Firebase (Auth,
+> Firestore, Storage) and no longer calls this API — see
+> `../DEPLOYMENT.md`. Kept here for reference only.
+
 **Status:** Full backend infrastructure built and ready for Phase 1 integration.
 
 ---
