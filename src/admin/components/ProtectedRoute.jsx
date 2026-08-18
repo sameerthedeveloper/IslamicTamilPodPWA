@@ -1,6 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import Sidebar from './Sidebar'
+import BottomNavBar from './BottomNavBar'
+import CustomizeNavSheet from './CustomizeNavSheet'
 
 function ProtectedRoute() {
   const status = useAuthStore((s) => s.status)
@@ -21,9 +23,11 @@ function ProtectedRoute() {
   return (
     <div>
       <Sidebar />
-      <div className="min-h-screen lg:ml-60">
+      <div className="min-h-screen pb-24 lg:ml-60 lg:pb-0">
         <Outlet />
       </div>
+      <BottomNavBar />
+      <CustomizeNavSheet />
     </div>
   )
 }

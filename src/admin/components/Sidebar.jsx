@@ -1,34 +1,9 @@
 import { useEffect } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
-import {
-  LayoutDashboard,
-  Mic2,
-  Users2,
-  Library,
-  Tags,
-  AudioLines,
-  ShieldCheck,
-  UsersRound,
-  Star,
-  Settings2,
-  LogOut,
-  X,
-} from 'lucide-react'
+import { LogOut, X } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useAdminUiStore } from '../store/uiStore'
-
-const NAV = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/episodes', label: 'Episodes', icon: Mic2 },
-  { to: '/admin/scholars', label: 'Scholars', icon: Users2 },
-  { to: '/admin/series', label: 'Series', icon: Library },
-  { to: '/admin/topics', label: 'Topics', icon: Tags },
-  { to: '/admin/audio', label: 'Audio Library', icon: AudioLines },
-  { to: '/admin/rights', label: 'Rights', icon: ShieldCheck },
-  { to: '/admin/users', label: 'Users', icon: UsersRound },
-  { to: '/admin/featured', label: 'Featured', icon: Star },
-  { to: '/admin/settings', label: 'Settings', icon: Settings2 },
-]
+import { NAV_ITEMS as NAV } from '../navConfig'
 
 function Sidebar() {
   const user = useAuthStore((s) => s.user)
