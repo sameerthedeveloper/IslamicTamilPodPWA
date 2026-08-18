@@ -24,7 +24,7 @@ function LibraryPage() {
   const isEmpty = bookmarks.length === 0 && history.length === 0
 
   return (
-    <main className="px-5 pb-52 pt-[calc(7rem+env(safe-area-inset-top))]">
+    <div className="px-5 pb-8 pt-6">
 
                 <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                     Library
@@ -81,7 +81,7 @@ function LibraryPage() {
                     </div>
                 )}
 
-            </main>
+            </div>
   )
 }
 

@@ -11,12 +11,14 @@ function AppLayout() {
   const isQuran = pathname === '/quran'
 
   return (
-    <div>
+    <div className="flex h-screen flex-col overflow-hidden">
       <TopBar />
 
-      <ErrorBoundary>
-        <Outlet />
-      </ErrorBoundary>
+      <main className="flex-1 overflow-y-auto">
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
+      </main>
 
       {!isQuran && <MiniPlayer />}
       <BottomNavigationBar />
