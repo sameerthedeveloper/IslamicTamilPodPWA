@@ -13,7 +13,7 @@ function MiniPlayer() {
 
     return (
         <div id="mini-player"
-            className="fixed inset-x-10 bottom-22 z-40 flex items-center justify-between rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg">
+            className="fixed inset-x-6 bottom-22 z-40 flex items-center justify-between rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg">
 
 
             <div
