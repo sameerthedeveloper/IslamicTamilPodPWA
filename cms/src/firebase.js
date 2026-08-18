@@ -4,13 +4,12 @@ import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAp86xFTd2hwuWKVCEPian7A1h7LsD_760',
-  authDomain: 'tamilpodcasts-f017c.firebaseapp.com',
-  projectId: 'tamilpodcasts-f017c',
-  storageBucket: 'tamilpodcasts-f017c.firebasestorage.app',
-  messagingSenderId: '554368268909',
-  appId: '1:554368268909:web:0f3d836a08d913551d5d64',
-  measurementId: 'G-5EXNC008Y6',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
 export const app = initializeApp(firebaseConfig)
