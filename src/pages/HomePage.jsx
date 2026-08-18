@@ -34,7 +34,7 @@ function HomePage() {
                 Listen to Tamil Islamic lectures and Quran recitations.
             </p>
 
-            <CardLayout title="Continue Listeninig">
+            <CardLayout title="Continue Listening">
                 {loading && (
                     <p className="text-sm text-gray-500">Loading...</p>
                 )}
@@ -64,6 +64,11 @@ function HomePage() {
             <CardLayout title="Discover">
                 {loading && (
                     <p className="text-sm text-gray-500">Loading...</p>
+                )}
+                {!loading && error && (
+                    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
+                        <p className="text-sm text-gray-500">Couldn't load episodes.</p>
+                    </div>
                 )}
                 {!loading && !error && episodes.length === 0 && (
                     <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
