@@ -8,12 +8,25 @@ function MiniPlayer() {
     const next = usePlayerStore((s) => s.next)
     const prev = usePlayerStore((s) => s.prev)
     const openPlayer = usePlayerStore((s) => s.openPlayer)
+    const currentTime = usePlayerStore((s) => s.currentTime)
+    const duration = usePlayerStore((s) => s.duration)
 
     if (!currentEpisode) return null
 
+    const pct = duration ? Math.min(100, (currentTime / duration) * 100) : 0
+
     return (
         <div id="mini-player"
-            className="fixed inset-x-6 bottom-22 z-40 flex items-center justify-between rounded-full border border-gray-200 bg-white px-4 py-2 shadow-lg">
+            className="fixed inset-x-6 bottom-22 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg">
+
+            <div className="h-0.5 w-full bg-gray-100">
+                <div
+                    className="h-full transition-[width] duration-200 ease-linear"
+                    style={{ width: `${pct}%`, background: 'var(--accent)' }}
+                />
+            </div>
+
+            <div className="flex items-center justify-between px-4 py-2">
 
 
             <div
@@ -36,12 +49,14 @@ function MiniPlayer() {
                 <div className="min-w-0">
 
                     <p className="truncate text-md font-semibold text-gray-900">
-                        {currentEpisode.title ?? 'Title'}
+                        {currentEpisode.title ?? 'Untitled'}
                     </p>
 
-                    <p className="truncate text-xs text-gray-500">
-                        {currentEpisode.scholar?.name ?? 'Scholar'}
-                    </p>
+                    {currentEpisode.scholar?.name && (
+                        <p className="truncate text-xs text-gray-500">
+                            {currentEpisode.scholar.name}
+                        </p>
+                    )}
 
                 </div>
 
@@ -72,6 +87,7 @@ function MiniPlayer() {
 
             </div>
 
+            </div>
         </div>
     )
 }

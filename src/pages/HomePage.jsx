@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { CloudOff, Sparkles } from 'lucide-react'
 import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
-import { getEpisodes } from '../api/client'
+import { getEpisodes, getHistory } from '../api/client'
+import { useUserStore } from '../store/userStore'
 
 function CardSkeleton() {
     return (
@@ -23,10 +24,26 @@ function EmptyRow({ icon: Icon, message }) {
     )
 }
 
+function historyToEpisode(h) {
+    return {
+        id: h.episodeId,
+        title: h.title,
+        thumbnail: h.thumbnail,
+        scholar: { name: h.scholarName },
+        youtubeId: h.youtubeId,
+        audioUrl: h.audioUrl,
+        currentTime: h.currentTime,
+        duration: h.duration,
+    }
+}
+
 function HomePage() {
     const [episodes, setEpisodes] = useState([])
+    const [continueListening, setContinueListening] = useState([])
     const [loading, setLoading] = useState(true)
+    const [historyLoading, setHistoryLoading] = useState(true)
     const [error, setError] = useState(false)
+    const authStatus = useUserStore((s) => s.status)
 
     useEffect(() => {
         let cancelled = false
@@ -43,8 +60,21 @@ function HomePage() {
         return () => { cancelled = true }
     }, [])
 
+    useEffect(() => {
+        if (authStatus !== 'ready') return
+        let cancelled = false
+        getHistory()
+            .then((rows) => {
+                if (!cancelled) setContinueListening(rows.map(historyToEpisode))
+            })
+            .finally(() => {
+                if (!cancelled) setHistoryLoading(false)
+            })
+        return () => { cancelled = true }
+    }, [authStatus])
+
     return (
-        <div className="px-5 pb-8 pt-6 mt-30">
+        <div className="px-5 pt-6">
 
             <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                 Assalamu Alaikum
@@ -55,14 +85,11 @@ function HomePage() {
             </p>
 
             <CardLayout title="Continue Listening">
-                {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
-                {!loading && error && (
-                    <EmptyRow icon={CloudOff} message="Couldn't load episodes." />
-                )}
-                {!loading && !error && episodes.length === 0 && (
+                {historyLoading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+                {!historyLoading && continueListening.length === 0 && (
                     <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!loading && !error && episodes.map((ep, i) => (
+                {!historyLoading && continueListening.map((ep, i) => (
                     <TitleCard
                         key={ep.id}
                         index={i}
@@ -71,6 +98,7 @@ function HomePage() {
                         thumbnail={ep.thumbnail}
                         image={ep.title?.[0]}
                         episode={ep}
+                        queue={continueListening}
                     />
                 ))}
             </CardLayout>
@@ -83,7 +111,7 @@ function HomePage() {
                 {!loading && !error && episodes.length === 0 && (
                     <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!loading && !error && [...episodes].reverse().map((ep, i) => (
+                {!loading && !error && [...episodes].reverse().map((ep, i, arr) => (
                     <TitleCard
                         key={ep.id}
                         index={i}
@@ -92,6 +120,7 @@ function HomePage() {
                         thumbnail={ep.thumbnail}
                         image={ep.title?.[0]}
                         episode={ep}
+                        queue={arr}
                     />
                 ))}
             </CardLayout>

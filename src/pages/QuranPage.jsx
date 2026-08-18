@@ -16,7 +16,7 @@ function QuranPage() {
   }, [])
 
   return (
-    <div className="px-5 pb-8 pt-6">
+    <div className="px-5 pt-6">
 
                 <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                     Quran

@@ -1,11 +1,6 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import {
-  initializeFirestore,
-  getFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-} from 'firebase/firestore'
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth'
+import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { isSupported, getAnalytics } from 'firebase/analytics'
 
@@ -22,19 +17,15 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 
-// Persistent local cache + multi-tab support so reads (and the last
-// snapshot of anything already fetched) keep working offline — a plain
-// service-worker app-shell cache alone wouldn't cover live Firestore data.
-// Falls back to the default in-memory-only client if IndexedDB isn't
-// available (private browsing, some in-app browsers, etc).
-export let db
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  })
-} catch {
-  db = getFirestore(app)
-}
+export const db = getFirestore(app)
+
+// The public app has no account system — sign every visitor in anonymously
+// so they get a stable per-device uid, which is all "users/{uid}/history"
+// (continue-listening progress) and "users/{uid}/bookmarks" need. Admin
+// login (email/password) simply replaces this session when it happens.
+onAuthStateChanged(auth, (user) => {
+  if (!user) signInAnonymously(auth).catch(() => {})
+})
 
 export const storage = getStorage(app)
 

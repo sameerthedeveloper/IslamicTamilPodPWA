@@ -3,9 +3,12 @@ import {
   doc,
   getDoc,
   getDocs,
+  setDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
+  serverTimestamp,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 
@@ -48,6 +51,13 @@ export async function getTopics() {
   return snap.docs.map(withId)
 }
 
+// Firestore has no OR queries across values without a composite index for
+// this shape — filter client-side over the already-fetched published set.
+export async function getEpisodesByTopic(topicName) {
+  const all = await publishedEpisodes()
+  return all.filter((ep) => ep.topics?.includes(topicName))
+}
+
 export async function getSeries(page = 1, limit = 20) {
   const snap = await getDocs(query(collection(db, 'series'), orderBy('createdAt', 'desc')))
   const all = snap.docs.map(withId)
@@ -56,17 +66,18 @@ export async function getSeries(page = 1, limit = 20) {
 }
 
 // Firestore has no full-text search; do a simple client-side title match
-// across the public collections instead.
+// across the public collections instead. Each result is tagged with `type`
+// so the UI can render/route it appropriately.
 export async function search(q, type) {
   if (!q?.trim()) return []
   const needle = q.trim().toLowerCase()
   const collections = type ? [type] : ['episodes', 'scholars', 'series']
   const results = await Promise.all(
     collections.map(async (name) => {
-      const snap = await getDocs(collection(db, name))
-      return snap.docs
-        .map(withId)
+      const items = name === 'episodes' ? await publishedEpisodes() : (await getDocs(collection(db, name))).docs.map(withId)
+      return items
         .filter((item) => (item.title || item.name || '').toLowerCase().includes(needle))
+        .map((item) => ({ ...item, type: name.slice(0, -1) }))
     }),
   )
   return results.flat()
@@ -80,8 +91,29 @@ export async function getHome() {
 export async function getBookmarks() {
   const user = auth.currentUser
   if (!user) return []
-  const snap = await getDocs(collection(db, 'users', user.uid, 'bookmarks'))
+  const snap = await getDocs(query(collection(db, 'users', user.uid, 'bookmarks'), orderBy('savedAt', 'desc')))
   return snap.docs.map(withId)
+}
+
+export async function addBookmark(episode) {
+  const uid = auth.currentUser?.uid
+  if (!uid || !episode?.id) return
+  await setDoc(doc(db, 'users', uid, 'bookmarks', String(episode.id)), {
+    episodeId: episode.id,
+    title: episode.title ?? null,
+    thumbnail: episode.thumbnail ?? null,
+    scholarName: episode.scholar?.name ?? null,
+    youtubeId: episode.youtubeId ?? null,
+    audioUrl: episode.audioAsset?.url ?? episode.audioUrl ?? null,
+    duration: episode.duration ?? null,
+    savedAt: serverTimestamp(),
+  })
+}
+
+export async function removeBookmark(episodeId) {
+  const uid = auth.currentUser?.uid
+  if (!uid) return
+  await deleteDoc(doc(db, 'users', uid, 'bookmarks', String(episodeId)))
 }
 
 export async function getHistory(limit = 20) {

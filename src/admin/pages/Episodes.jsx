@@ -105,10 +105,16 @@ function Episodes() {
     }
 
     const youtubeId = extractYoutubeId(form.youtubeUrl)
+    const scholar = scholars.find((s) => s.id === form.scholarId)
+    const seriesEntry = series.find((s) => s.id === form.seriesId)
     const payload = {
       title: form.title,
       scholarId: form.scholarId,
+      // Denormalized so the public app (Home/Discover/Library/player) can
+      // render scholar/series info without an extra fetch per episode.
+      scholar: scholar ? { name: scholar.name } : null,
       seriesId: form.seriesId || undefined,
+      series: seriesEntry ? { title: seriesEntry.title } : null,
       topics: form.topics,
       description: form.description || undefined,
       status: form.status,

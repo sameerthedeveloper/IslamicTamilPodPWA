@@ -7,6 +7,8 @@ export const usePlayerStore = create((set, get) => ({
   currentTime: 0,
   duration: 0,
   volume: 1,
+  playbackRate: 1,
+  sleepTimerMinutes: null,
   isPlayerOpen: false,
   engines: { audio: null, youtube: null },
 
@@ -23,13 +25,24 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   seek: (time) => {
-    get().activeEngine()?.seek(time)
-    set({ currentTime: time })
+    const clamped = Math.max(0, Math.min(time, get().duration || time))
+    get().activeEngine()?.seek(clamped)
+    set({ currentTime: clamped })
   },
 
-  play: (episode) => {
+  skipBy: (deltaSeconds) => {
+    get().seek(get().currentTime + deltaSeconds)
+  },
+
+  play: (episode, list) => {
     if (episode) {
-      set({ currentEpisode: episode, isPlaying: true, currentTime: 0, duration: 0 })
+      set({
+        currentEpisode: episode,
+        isPlaying: true,
+        currentTime: episode.currentTime || 0,
+        duration: 0,
+        ...(list && { queue: list }),
+      })
     } else {
       set({ isPlaying: true })
     }
@@ -47,6 +60,19 @@ export const usePlayerStore = create((set, get) => ({
     if (nextEp) set({ currentEpisode: nextEp, isPlaying: true, currentTime: 0, duration: 0 })
   },
 
+  // Called when the active track finishes — advance the queue, or if this
+  // was the last (or only) track, stop and close the player entirely.
+  onEnded: () => {
+    const { queue, currentEpisode } = get()
+    const idx = queue.findIndex((e) => e.id === currentEpisode?.id)
+    const nextEp = queue[idx + 1]
+    if (nextEp) {
+      set({ currentEpisode: nextEp, isPlaying: true, currentTime: 0, duration: 0 })
+    } else {
+      set({ currentEpisode: null, isPlaying: false, isPlayerOpen: false, currentTime: 0, duration: 0 })
+    }
+  },
+
   prev: () => {
     const { queue, currentEpisode } = get()
     if (!queue.length || !currentEpisode) return
@@ -58,4 +84,21 @@ export const usePlayerStore = create((set, get) => ({
   setCurrentTime: (currentTime) => set({ currentTime }),
   setDuration: (duration) => set({ duration }),
   setVolume: (volume) => set({ volume }),
+  setPlaybackRate: (playbackRate) => set({ playbackRate }),
+
+  // Stops playback once the timer elapses. Passing null cancels an active
+  // timer. Stores the chosen duration (not a live countdown) so the UI
+  // never needs to read the clock during render.
+  setSleepTimer: (minutes) => {
+    const state = get()
+    clearTimeout(state._sleepTimeoutId)
+    if (!minutes) {
+      set({ sleepTimerMinutes: null, _sleepTimeoutId: null })
+      return
+    }
+    const id = setTimeout(() => {
+      set({ isPlaying: false, sleepTimerMinutes: null, _sleepTimeoutId: null })
+    }, minutes * 60000)
+    set({ sleepTimerMinutes: minutes, _sleepTimeoutId: id })
+  },
 }))
