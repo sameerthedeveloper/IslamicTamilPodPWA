@@ -22,7 +22,7 @@ function ProtectedRoute() {
   return (
     <div>
       <Sidebar />
-      <div className="min-h-screen pb-24 lg:ml-60 lg:pb-0">
+      <div className="min-h-screen pb-[calc(6rem+env(safe-area-inset-bottom))] lg:ml-60 lg:pb-0">
         <Outlet />
       </div>
       <BottomNavBar />

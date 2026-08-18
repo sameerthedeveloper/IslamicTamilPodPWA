@@ -2,7 +2,7 @@
 function TopBar() {
   return (
         <header
-            className="fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur">
+            className="pt-safe fixed inset-x-0 top-0 z-50 flex min-h-20 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur">
 
 
             <div>

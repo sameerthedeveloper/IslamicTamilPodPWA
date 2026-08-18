@@ -38,7 +38,7 @@ function FullPlayerSheet() {
         }
       `}</style>
 
-      <header className="flex h-20 shrink-0 items-center justify-between px-5">
+      <header className="pt-safe flex min-h-20 shrink-0 items-center justify-between px-5">
         <button
           onClick={closePlayer}
           aria-label="Close player"
@@ -53,7 +53,7 @@ function FullPlayerSheet() {
         <div className="h-10 w-10" />
       </header>
 
-      <main className="flex flex-1 flex-col items-center justify-center px-8 pb-10">
+      <main className="flex flex-1 flex-col items-center justify-center px-8 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
 
         <div className="flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-gray-500 shadow-xl">
           {currentEpisode.thumbnail ? (

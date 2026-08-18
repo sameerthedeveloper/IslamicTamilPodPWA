@@ -6,7 +6,7 @@ function TopBar({ title, crumb }) {
 
   return (
     <header
-      className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8"
+      className="pt-safe sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8"
       style={{ background: 'var(--base)', borderBottom: '1px solid var(--border)' }}
     >
       <div className="flex min-w-0 items-center gap-3">

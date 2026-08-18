@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { isSupported, getAnalytics } from 'firebase/analytics'
 
@@ -16,7 +21,21 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+
+// Persistent local cache + multi-tab support so reads (and the last
+// snapshot of anything already fetched) keep working offline — a plain
+// service-worker app-shell cache alone wouldn't cover live Firestore data.
+// Falls back to the default in-memory-only client if IndexedDB isn't
+// available (private browsing, some in-app browsers, etc).
+export let db
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  })
+} catch {
+  db = getFirestore(app)
+}
+
 export const storage = getStorage(app)
 
 // Analytics only works in a browser that supports it (not during SSR/build).

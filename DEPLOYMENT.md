@@ -54,7 +54,29 @@ Since `/admin` only gates by Firebase Auth + a Firestore role check (no network-
 
 ---
 
-## 3. Firebase project setup
+## 3. PWA
+
+The app is a full installable PWA (both the public site and `/admin`):
+
+- `vite-plugin-pwa` (configured in `vite.config.js`) generates the service
+  worker and `manifest.webmanifest` on every build — nothing to run
+  separately. Precaches the app shell; Firebase Storage downloads
+  (audio/images) are cache-first at runtime, Google Fonts stale-while-
+  revalidate.
+- Icons live in `public/` (`pwa-192.png`, `pwa-512.png`,
+  `pwa-maskable-512.png`, `apple-touch-icon.png`) — regenerate them from
+  `scripts/pwa-icons/*.svg` via `node scripts/pwa-icons/generate.mjs` if
+  the brand mark ever changes.
+- Firestore itself has offline persistence enabled (`src/firebase.js`,
+  `persistentLocalCache`) — data already read stays available offline,
+  not just the static shell.
+- `registerType: 'autoUpdate'` — a new deploy's service worker activates
+  and reloads clients automatically on next navigation, no manual "update
+  available" prompt needed.
+- Test install locally with `npm run build && npm run preview` (PWA
+  features need a real build, `npm run dev` doesn't register the SW).
+
+## 4. Firebase project setup
 
 1. **Auth**: Firebase Console → Authentication → enable **Email/Password** sign-in. Create your admin user(s) there (Authentication → Users → Add user).
 2. **Firestore**: Firebase Console → Firestore Database → create the database (production mode).
@@ -68,7 +90,7 @@ Since `/admin` only gates by Firebase Auth + a Firestore role check (no network-
 
 ---
 
-## 4. Data model (Firestore collections)
+## 5. Data model (Firestore collections)
 
 | Collection | Written by | Notes |
 |---|---|---|
@@ -84,7 +106,7 @@ Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired
 
 ---
 
-## 5. Rollback
+## 6. Rollback
 
 - **App (Vercel):** every deploy is a preserved, immutable deployment — promote a previous one to production from the Vercel dashboard's Deployments tab, or `vercel rollback`.
 - **Firestore data:** no automatic versioning — if you need point-in-time recovery, enable scheduled Firestore backups (Firebase Console → Firestore → Backups) before you need them.
@@ -92,11 +114,11 @@ Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `/admin` login succeeds then immediately bounces to `/admin/login` | No `users/{uid}` Firestore doc, or `role` isn't exactly `"ADMIN"` | Create/fix the doc — see §3 step 5 |
+| `/admin` login succeeds then immediately bounces to `/admin/login` | No `users/{uid}` Firestore doc, or `role` isn't exactly `"ADMIN"` | Create/fix the doc — see §4 step 5 |
 | Reading/writing any collection throws `permission-denied` | Firestore rules not published yet, or the signed-in user doesn't satisfy them | Publish `firestore.rules`; check the specific collection's rule in that file |
 | Refreshing `/admin/episodes` (or any non-root path) on Vercel 404s | SPA rewrite missing | Confirm `vercel.json`'s rewrite is present and the Vercel project is using the repo root, not a subdirectory |
 | Query throws "The query requires an index" | Missing the composite index from `firestore.indexes.json` | Click the link in the error, or deploy indexes via the CLI |

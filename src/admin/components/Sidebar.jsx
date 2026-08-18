@@ -36,7 +36,7 @@ function Sidebar() {
         }`}
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
       >
-        <div className="flex h-16 items-center justify-between gap-2 px-5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div className="pt-safe flex min-h-16 items-center justify-between gap-2 px-5" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2 min-w-0">
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
@@ -83,7 +83,7 @@ function Sidebar() {
           ))}
         </nav>
 
-        <div className="px-4 py-4" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className="px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4" style={{ borderTop: '1px solid var(--border)' }}>
           <Link
             to="/"
             className="mb-3 block text-xs font-medium"

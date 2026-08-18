@@ -40,6 +40,15 @@ body {
   outline-offset: 2px;
 }
 
+/* iOS/Android safe-area support (notch, home indicator, status bar) —
+   only meaningful with viewport-fit=cover, set in index.html. */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 select.select-field {
   appearance: none;
   -webkit-appearance: none;
