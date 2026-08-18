@@ -82,8 +82,8 @@ function Episodes() {
 
     const payload = {
       title: form.title,
-      scholarId: Number(form.scholarId),
-      seriesId: form.seriesId ? Number(form.seriesId) : undefined,
+      scholarId: form.scholarId,
+      seriesId: form.seriesId || undefined,
       topics: form.topics,
       description: form.description || undefined,
       status: form.status,
@@ -215,7 +215,7 @@ function Episodes() {
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Scholar</label>
           <SearchableSelect
             options={scholars}
-            value={form.scholarId ? Number(form.scholarId) : null}
+            value={form.scholarId || null}
             onChange={(id) => setForm((f) => ({ ...f, scholarId: id }))}
             placeholder="Choose scholar…"
           />
@@ -225,7 +225,7 @@ function Episodes() {
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Series (optional)</label>
           <SearchableSelect
             options={series}
-            value={form.seriesId ? Number(form.seriesId) : null}
+            value={form.seriesId || null}
             onChange={(id) => setForm((f) => ({ ...f, seriesId: id }))}
             getLabel={(s) => s.title}
             placeholder="No series"
@@ -276,7 +276,7 @@ function Episodes() {
           <select
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-            className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+            className="select-field w-full rounded-xl px-3 py-2 text-sm outline-none"
             style={{ border: '1px solid var(--border)' }}
           >
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}

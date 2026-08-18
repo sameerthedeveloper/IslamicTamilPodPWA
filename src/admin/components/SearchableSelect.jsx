@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Check } from 'lucide-react'
 
 function SearchableSelect({ options, value, onChange, placeholder = 'Select…', getLabel = (o) => o.name, getValue = (o) => o.id }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const rootRef = useRef(null)
 
   const filtered = useMemo(() => {
     if (!query.trim()) return options
@@ -12,8 +13,30 @@ function SearchableSelect({ options, value, onChange, placeholder = 'Select…',
 
   const selected = options.find((o) => getValue(o) === value)
 
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -21,12 +44,12 @@ function SearchableSelect({ options, value, onChange, placeholder = 'Select…',
         style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: selected ? 'var(--ink)' : 'var(--muted)' }}
       >
         {selected ? getLabel(selected) : placeholder}
-        <ChevronDown size={14} style={{ color: 'var(--muted)' }} />
+        <ChevronDown size={14} style={{ color: 'var(--muted)', transform: open ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s ease' }} />
       </button>
 
       {open && (
         <div
-          className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl"
+          className="absolute z-20 mt-1 w-full overflow-hidden rounded-xl"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(28,25,23,0.12)' }}
         >
           <input

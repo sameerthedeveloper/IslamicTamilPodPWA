@@ -138,7 +138,7 @@ function Scholars() {
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+              className="select-field w-full rounded-xl px-3 py-2 text-sm outline-none"
               style={{ border: '1px solid var(--border)' }}
             >
               <option value="ACTIVE">ACTIVE</option>

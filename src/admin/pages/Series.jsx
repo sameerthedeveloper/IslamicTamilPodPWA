@@ -32,7 +32,7 @@ function Series() {
 
   const submit = async () => {
     setError('')
-    const payload = { title: form.title, scholarId: Number(form.scholarId), description: form.description || undefined, status: form.status }
+    const payload = { title: form.title, scholarId: form.scholarId, description: form.description || undefined, status: form.status }
     try {
       if (form.id) await seriesApi.update(form.id, payload)
       else await seriesApi.create(payload)
@@ -98,7 +98,7 @@ function Series() {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Scholar</label>
-          <SearchableSelect options={scholars} value={form.scholarId ? Number(form.scholarId) : null} onChange={(id) => setForm((f) => ({ ...f, scholarId: id }))} placeholder="Choose scholar…" />
+          <SearchableSelect options={scholars} value={form.scholarId || null} onChange={(id) => setForm((f) => ({ ...f, scholarId: id }))} placeholder="Choose scholar…" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Description</label>
@@ -111,7 +111,7 @@ function Series() {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Status</label>
-          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
+          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="select-field w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>

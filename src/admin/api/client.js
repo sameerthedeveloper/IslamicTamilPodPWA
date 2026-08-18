@@ -10,6 +10,7 @@ import {
   getCountFromServer,
   query,
   orderBy,
+  writeBatch,
 } from 'firebase/firestore'
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../firebase'
@@ -153,4 +154,33 @@ export const statsApi = {
 
 export const usersApi = {
   list: () => listAll('users', 'name'),
+}
+
+// Bulk JSON import — writes many records into one collection at once
+// (Settings page). Firestore batched writes cap at 500 ops, so chunk
+// well under that.
+const BULK_IMPORT_CHUNK_SIZE = 400
+
+export const bulkImportApi = {
+  collections: ['episodes', 'scholars', 'series', 'topics', 'rights', 'featured'],
+  import: async (collectionName, records) => {
+    if (!Array.isArray(records) || records.length === 0) {
+      throw new Error('JSON must be a non-empty array of records.')
+    }
+    let count = 0
+    for (let i = 0; i < records.length; i += BULK_IMPORT_CHUNK_SIZE) {
+      const chunk = records.slice(i, i + BULK_IMPORT_CHUNK_SIZE)
+      const batch = writeBatch(db)
+      chunk.forEach((record) => {
+        if (typeof record !== 'object' || record === null || Array.isArray(record)) {
+          throw new Error(`Record ${count + 1} is not a JSON object.`)
+        }
+        const ref = doc(collection(db, collectionName))
+        batch.set(ref, { ...record, createdAt: record.createdAt ?? Date.now() })
+        count += 1
+      })
+      await batch.commit()
+    }
+    return { count }
+  },
 }

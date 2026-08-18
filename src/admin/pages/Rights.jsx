@@ -48,7 +48,7 @@ function Rights() {
     setError('')
     const payload = {
       owner: form.owner,
-      scholarId: Number(form.scholarId),
+      scholarId: form.scholarId,
       status: form.status,
       licenseExpiry: form.licenseExpiry || null,
     }
@@ -134,7 +134,7 @@ function Rights() {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Scholar</label>
-          <SearchableSelect options={scholars} value={form.scholarId ? Number(form.scholarId) : null} onChange={(id) => setForm((f) => ({ ...f, scholarId: id }))} placeholder="Choose scholar…" />
+          <SearchableSelect options={scholars} value={form.scholarId || null} onChange={(id) => setForm((f) => ({ ...f, scholarId: id }))} placeholder="Choose scholar…" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>License expiry</label>
@@ -142,7 +142,7 @@ function Rights() {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Status</label>
-          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
+          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="select-field w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
