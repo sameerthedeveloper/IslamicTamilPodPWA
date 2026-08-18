@@ -7,7 +7,7 @@ function TopBar() {
 
             <div>
 
-                <p className="text-xl font-bold tracking-tight text-gray-900">
+                <p className="font-display text-xl font-semibold tracking-tight text-gray-900">
                     Tamil Islamic Podcast
                 </p>
 

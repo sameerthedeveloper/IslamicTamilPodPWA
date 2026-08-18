@@ -1,21 +1,21 @@
-
-function CardLayout({children,title}) {
+function CardLayout({ children, title }) {
   return (
     <div className="mt-8">
 
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        {title}
-                    </h2>
+      <div className="flex items-center gap-2.5">
+        <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+        <h2 className="font-display text-xl font-semibold text-gray-900">
+          {title}
+        </h2>
+      </div>
 
-                    <div className="mt-4 flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+      <div className="mt-4 flex gap-4 overflow-x-auto scrollbar-hide pb-2">
 
+        {children}
 
+      </div>
 
-                    {children}
-
-                    </div>
-
-                </div>
+    </div>
   )
 }
 

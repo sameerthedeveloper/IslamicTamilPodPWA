@@ -1,7 +1,27 @@
 import { useEffect, useState } from 'react'
+import { CloudOff, Sparkles } from 'lucide-react'
 import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
 import { getEpisodes } from '../api/client'
+
+function CardSkeleton() {
+    return (
+        <div className="flex h-60 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2">
+            <div className="skeleton flex-1 rounded-xl" />
+            <div className="skeleton mt-2 h-3.5 w-3/4 rounded-full" />
+            <div className="skeleton mt-1.5 h-3 w-1/2 rounded-full" />
+        </div>
+    )
+}
+
+function EmptyRow({ icon: Icon, message }) {
+    return (
+        <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+            <Icon size={18} className="shrink-0" style={{ color: 'var(--muted)' }} />
+            <p className="text-sm text-gray-500">{message}</p>
+        </div>
+    )
+}
 
 function HomePage() {
     const [episodes, setEpisodes] = useState([])
@@ -26,7 +46,7 @@ function HomePage() {
     return (
         <main className="px-5 pb-52 pt-28">
 
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                 Assalamu Alaikum
             </h1>
 
@@ -35,23 +55,17 @@ function HomePage() {
             </p>
 
             <CardLayout title="Continue Listening">
-                {loading && (
-                    <p className="text-sm text-gray-500">Loading...</p>
-                )}
+                {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
                 {!loading && error && (
-                    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
-                        <p className="text-sm text-gray-500">Couldn't load episodes.</p>
-                    </div>
+                    <EmptyRow icon={CloudOff} message="Couldn't load episodes." />
                 )}
                 {!loading && !error && episodes.length === 0 && (
-                    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
-                        <p className="text-sm text-gray-500">Nothing here yet.</p>
-                    </div>
+                    <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!loading && !error && episodes.map((ep) => (
+                {!loading && !error && episodes.map((ep, i) => (
                     <TitleCard
                         key={ep.id}
-                        id={ep.id}
+                        index={i}
                         title={ep.title}
                         scholarName={ep.scholar?.name}
                         thumbnail={ep.thumbnail}
@@ -62,23 +76,17 @@ function HomePage() {
             </CardLayout>
 
             <CardLayout title="Discover">
-                {loading && (
-                    <p className="text-sm text-gray-500">Loading...</p>
-                )}
+                {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
                 {!loading && error && (
-                    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
-                        <p className="text-sm text-gray-500">Couldn't load episodes.</p>
-                    </div>
+                    <EmptyRow icon={CloudOff} message="Couldn't load episodes." />
                 )}
                 {!loading && !error && episodes.length === 0 && (
-                    <div className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-center">
-                        <p className="text-sm text-gray-500">Nothing here yet.</p>
-                    </div>
+                    <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!loading && !error && [...episodes].reverse().map((ep) => (
+                {!loading && !error && [...episodes].reverse().map((ep, i) => (
                     <TitleCard
                         key={ep.id}
-                        id={ep.id}
+                        index={i}
                         title={ep.title}
                         scholarName={ep.scholar?.name}
                         thumbnail={ep.thumbnail}

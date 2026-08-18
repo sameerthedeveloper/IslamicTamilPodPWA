@@ -26,7 +26,7 @@ function LibraryPage() {
   return (
     <main className="px-5 pb-52 pt-28">
 
-                <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+                <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                     Library
                 </h1>
 
@@ -35,15 +35,20 @@ function LibraryPage() {
                 </p>
 
                 {isEmpty && (
-                    <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 text-center">
+                    <div className="mt-8 flex flex-col items-center rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center animate-rise-in">
 
-                        <BookX size={32} className="mx-auto text-gray-400" />
+                        <div
+                            className="flex h-14 w-14 items-center justify-center rounded-full"
+                            style={{ background: 'var(--accent-soft)' }}
+                        >
+                            <BookX size={24} style={{ color: 'var(--accent)' }} />
+                        </div>
 
-                        <p className="mt-4 font-medium text-gray-900">
+                        <p className="font-display mt-4 text-lg font-semibold text-gray-900">
                             Your Library is Empty
                         </p>
 
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="mt-1 max-w-[240px] text-sm text-gray-500">
                             Save lectures and podcasts to find them here.
                         </p>
 
@@ -52,7 +57,7 @@ function LibraryPage() {
 
                 {!isEmpty && bookmarks.length > 0 && (
                     <div className="mt-8">
-                        <h2 className="text-lg font-semibold text-gray-900">Bookmarks</h2>
+                        <h2 className="font-display text-lg font-semibold text-gray-900">Bookmarks</h2>
                         <div className="mt-4 flex flex-col gap-2">
                             {bookmarks.map((b) => (
                                 <div key={b.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -65,7 +70,7 @@ function LibraryPage() {
 
                 {!isEmpty && history.length > 0 && (
                     <div className="mt-8">
-                        <h2 className="text-lg font-semibold text-gray-900">History</h2>
+                        <h2 className="font-display text-lg font-semibold text-gray-900">History</h2>
                         <div className="mt-4 flex flex-col gap-2">
                             {history.map((h) => (
                                 <div key={h.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">

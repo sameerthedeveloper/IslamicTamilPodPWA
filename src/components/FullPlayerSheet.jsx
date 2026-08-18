@@ -55,18 +55,20 @@ function FullPlayerSheet() {
 
       <main className="flex flex-1 flex-col items-center justify-center px-8 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
 
-        <div className="flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-gray-500 shadow-xl">
+        <div
+          className="flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 shadow-xl"
+          style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
           {currentEpisode.thumbnail ? (
             <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
           ) : (
-            <span className="text-7xl font-bold text-white/90">
+            <span className="font-display text-7xl font-semibold text-white/90">
               {currentEpisode.title?.[0] ?? 'I'}
             </span>
           )}
         </div>
 
         <div className="mt-10 w-full max-w-sm">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 truncate">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900 truncate">
             {currentEpisode.title ?? 'Title'}
           </h1>
           <p className="mt-1 text-sm text-gray-500 truncate">

@@ -22,7 +22,8 @@ function MiniPlayer() {
 
 
                 <div
-                    className="flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 bg-gray-500 overflow-hidden">
+                    className="font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden"
+                    style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
                     {currentEpisode.thumbnail ? (
                         <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
                     ) : (
