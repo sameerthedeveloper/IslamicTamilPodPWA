@@ -10,7 +10,7 @@ const TABS = [
 
 function BottomNavigationBar() {
     return (
-        <nav className="relative z-50 mx-3 mt-2 shrink-0 rounded-full border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-sm mb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <nav className="fixed bottom-0 my-3 z-50 inset-x-5  rounded-full border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-sm ">
             <div className="grid grid-cols-4 gap-1">
                 {TABS.map(({ to, label, icon: Icon, end }) => (
                     <NavLink
