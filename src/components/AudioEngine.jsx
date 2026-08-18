@@ -37,6 +37,9 @@ function NativeAudioEngine() {
       seek: (time) => {
         if (audioRef.current) audioRef.current.currentTime = time
       },
+      resume: () => {
+        if (audioRef.current?.paused) audioRef.current.play().catch(() => {})
+      },
     })
   }, [])
 
@@ -108,8 +111,12 @@ function YoutubeEngine() {
     loadYoutubeApi().then((YT) => {
       if (cancelled) return
       playerRef.current = new YT.Player(containerRef.current, {
-        height: '1',
-        width: '1',
+        // iOS/WebKit treats 1x1 iframes as likely ad/tracker content and
+        // suspends them (and their audio) far more aggressively in the
+        // background — a real-sized iframe positioned off-screen doesn't
+        // trip that heuristic and keeps playing when the screen locks.
+        height: '180',
+        width: '320',
         playerVars: {
           controls: 0,
           disablekb: 1,
@@ -122,6 +129,11 @@ function YoutubeEngine() {
           onReady: () => {
             registerEngine('youtube', {
               seek: (time) => playerRef.current?.seekTo(time, true),
+              resume: () => {
+                if (playerRef.current?.getPlayerState?.() !== YT.PlayerState.PLAYING) {
+                  playerRef.current?.playVideo?.()
+                }
+              },
             })
             playerRef.current.setVolume(volume * 100)
           },
@@ -177,9 +189,11 @@ function YoutubeEngine() {
     return () => clearInterval(pollRef.current)
   }, [isYoutube])
 
-  return <div style={{ position: 'fixed', width: 1, height: 1, opacity: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-    <div ref={containerRef} />
-  </div>
+  return (
+    <div style={{ position: 'fixed', top: 0, left: '-9999px', width: 320, height: 180, pointerEvents: 'none' }}>
+      <div ref={containerRef} />
+    </div>
+  )
 }
 
 // Lock-screen / notification-shade media controls, like a native player.
@@ -278,6 +292,26 @@ function HistorySync() {
   return null
 }
 
+// iOS can silently pause a backgrounded/locked YouTube iframe despite the
+// fixes above. Re-assert play on return to foreground so the user comes
+// back to actually-playing audio instead of a silently stalled player.
+function ForegroundResume() {
+  const isPlaying = usePlayerStore((s) => s.isPlaying)
+  const activeEngine = usePlayerStore((s) => s.activeEngine)
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && isPlaying) {
+        activeEngine()?.resume?.()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [isPlaying])
+
+  return null
+}
+
 function AudioEngine() {
   return (
     <>
@@ -285,6 +319,7 @@ function AudioEngine() {
       <YoutubeEngine />
       <MediaSessionSync />
       <HistorySync />
+      <ForegroundResume />
     </>
   )
 }
