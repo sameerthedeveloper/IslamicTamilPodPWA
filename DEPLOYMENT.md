@@ -1,187 +1,113 @@
 # Deployment Guide
 
-Tamil Islamic Audio Platform — four deployable pieces:
+Tamil Islamic Podcast — one deployable app plus a legacy, no-longer-used API.
 
 | Piece | Repo path | Runs where |
 |---|---|---|
-| API | `backend/` | Railway (Docker) |
-| Worker | `backend/` (same image, `start:worker` command) | Railway (Docker, separate service) |
-| Frontend (listener PWA) | `frontend/` | Vercel |
-| CMS (admin) | `cms/` | Vercel (separate project) |
+| App (public listener PWA + `/admin` CMS) | repo root (`src/`) | Vercel |
+| Firebase project (Auth, Firestore, Storage) | n/a — hosted by Firebase | Google Cloud |
+| ~~API~~ (legacy, unused) | `backend/` | Not deployed — kept in the repo but neither the app nor the CMS calls it anymore |
 
-Postgres and Redis are Railway managed plugins. Audio/thumbnail storage is Cloudflare R2 in production, MinIO locally — same client code, only env vars differ (`backend/src/common/storage/storage.service.ts`).
+The app used to be two separate Vite projects (`frontend/` and `cms/`) talking to a custom Node API in `backend/`. It's now a single Vite project at the repo root: the public site lives at `/`, `/library`, `/browse`, `/quran`, and the admin CMS lives at `/admin/*` (`src/admin/`), gated by Firebase Auth + a Firestore role check. Both talk to Firebase directly — there is no backend server to deploy.
 
 ---
 
 ## 1. Local development
 
-Requires Docker + Docker Compose.
-
 ```bash
-cd backend
-cp .env.example .env
-docker compose up -d --build
+cp .env.example .env   # fill in the VITE_FIREBASE_* values below
+npm install
+npm run dev             # http://localhost:5173
 ```
 
-Brings up `postgres`, `redis`, `minio`, `api` (port 3000), `worker`. First boot, run migrations and seed:
+- Public app: `http://localhost:5173/`
+- Admin CMS: `http://localhost:5173/admin/login`
 
-```bash
-docker exec tamil_audio_api npx prisma migrate deploy
-docker exec tamil_audio_api npm run seed
-```
-
-Frontend and CMS run outside Docker:
-
-```bash
-cp frontend/.env.example frontend/.env.local
-cp cms/.env.example cms/.env.local
-npm --prefix frontend run dev   # http://localhost:5173
-npm --prefix cms run dev        # http://localhost:5174
-```
-
-Verify:
-- `curl http://localhost:3000/health` → `{"status":"ok","checks":{"db":true,"redis":true}}`
-- `curl http://localhost:3000/api/v1/episodes` → real seeded data
-- Swagger docs: `http://localhost:3000/docs`
-
-If `docker compose up` errors with "port already allocated" on 5432/6379/9000, another local project is squatting those ports — this compose file already uses 6380/9002/9003 on the host side for redis/minio to reduce collisions; adjust further in `backend/docker-compose.yml` if needed. Only the host-side mapping matters; containers still talk to each other over the internal Docker network on the standard ports.
+No Docker, database, or worker needed — Firestore/Storage/Auth are Google-hosted.
 
 ---
 
-## 2. Backend + worker → Railway
+## 2. App → Vercel
 
-Both API and worker deploy from the same `backend/Dockerfile` as two separate Railway services pointed at the same repo/root — they differ only in **start command**.
+One Vercel project, pointed at the repo root:
 
-1. Create a Railway project, add **PostgreSQL** and **Redis** plugins.
-2. Add service **api**:
-   - Root directory: `backend`
-   - Build: Dockerfile (auto-detected)
-   - Start command: `npm start` (i.e. `node dist/main.js`)
-   - Attach the env vars from the table below
-3. Add service **worker**:
-   - Same repo/root/Dockerfile
-   - Start command: `npm run start:worker`
-   - Same env vars as api, minus `APP_PORT`/`CORS_ORIGINS` (unused by the worker)
-4. Run migrations once against the Railway Postgres (from local machine or a Railway one-off run):
-   ```bash
-   DATABASE_URL=<railway-postgres-url> npx prisma migrate deploy
-   ```
-5. First deploy: verify `https://<api-domain>/health` returns `db: true, redis: true`, and `https://<api-domain>/docs` loads.
-
-The worker has no HTTP port — Railway just needs to see the process running (BullMQ `Worker` keeps it alive); don't attach a public domain to it.
-
----
-
-## 3. Frontend + CMS → Vercel
-
-Two separate Vercel projects, both pointed at this repo:
-
-**Frontend**
-- Root directory: `frontend`
+- Root directory: repo root (leave blank/default)
 - Framework preset: Vite
 - Build command: `npm run build` — Output: `dist`
-- Env var: `VITE_API_URL=https://<api-domain>/api/v1`
+- `vercel.json` at the repo root already adds the SPA rewrite (`/*` → `/index.html`) that client-side routing (`react-router-dom`) needs for direct loads/refreshes of `/admin/episodes` etc.
 
-**CMS**
-- Root directory: `cms`
-- Same Vite preset/build/output
-- Env var: `VITE_API_URL=https://<api-domain>/api/v1`
-- Consider putting this project behind Vercel's password protection or a separate subdomain (`admin.yourdomain.com`) since the app itself only gates by JWT role, not network access.
+**Environment variables** (Project Settings → Environment Variables — set for Production, Preview, and Development):
 
-Both are static SPAs — no server-side env vars, no serverless functions.
-
----
-
-## 4. Cloudflare R2 (production storage)
-
-1. Create an R2 bucket (e.g. `tamil-audio-prod`).
-2. Create an R2 API token with read/write scoped to that bucket → gives you Access Key ID + Secret.
-3. On the **api** and **worker** Railway services, set:
-   ```
-   STORAGE_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
-   STORAGE_ACCESS_KEY=<r2-access-key-id>
-   STORAGE_SECRET_KEY=<r2-secret-access-key>
-   STORAGE_BUCKET=tamil-audio-prod
-   STORAGE_REGION=auto
-   ```
-   No code change — `StorageService` reads these directly; it's the same MinIO-compatible S3 client either way.
-4. Put Cloudflare CDN in front of the bucket's public/custom domain for delivery, and in front of the Vercel frontend domain via Cloudflare DNS proxy (orange-cloud) for caching + DDoS protection.
-5. Signed URLs (`StorageService.signedUrl`) are used for anything that shouldn't be world-readable; never expose `STORAGE_SECRET_KEY` to the frontend or CMS.
-
----
-
-## 5. Environment variables
-
-### `backend/.env` (API + worker)
-
-| Var | Example | Notes |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://user:pass@host:5432/db` | Railway Postgres plugin provides this |
-| `REDIS_URL` | `redis://host:6379` | Railway Redis plugin provides this |
-| `STORAGE_ENDPOINT` | `https://<acct>.r2.cloudflarestorage.com` | MinIO locally, R2 in prod |
-| `STORAGE_ACCESS_KEY` | — | R2 API token access key |
-| `STORAGE_SECRET_KEY` | — | R2 API token secret |
-| `STORAGE_BUCKET` | `tamil-audio-prod` | |
-| `STORAGE_REGION` | `auto` | R2 uses `auto`; MinIO ignores it |
-| `JWT_SECRET` | 32+ random chars | **Rotate before real launch** — default in `.env.example` is a placeholder, never use it in prod |
-| `JWT_EXPIRY` | `15m` | |
-| `JWT_REFRESH_EXPIRY` | `7d` | |
-| `CORS_ORIGINS` | `https://app.yourdomain.com,https://admin.yourdomain.com` | Comma-separated. **Required** outside dev — unset + non-dev NODE_ENV blocks all origins by design |
-| `NODE_ENV` | `production` | |
-| `APP_PORT` | `3000` | Railway sets `PORT` too; keep in sync if Railway overrides it |
-
-### `frontend/.env.local`, `cms/.env.local`
-
-| Var | Example |
+| Var | Where to find it |
 |---|---|
-| `VITE_API_URL` | `https://api.yourdomain.com/api/v1` |
+| `VITE_FIREBASE_API_KEY` | Firebase Console → Project settings → General → Your apps → Web app config |
+| `VITE_FIREBASE_AUTH_DOMAIN` | same |
+| `VITE_FIREBASE_PROJECT_ID` | same |
+| `VITE_FIREBASE_STORAGE_BUCKET` | same |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | same |
+| `VITE_FIREBASE_APP_ID` | same |
+| `VITE_FIREBASE_MEASUREMENT_ID` | same (Analytics — optional) |
 
-No secrets belong in either frontend env file — both are bundled client-side and public by nature.
+These are Firebase's public client-side web config values, not secrets — access control is enforced by Firestore/Storage security rules, not by hiding this config. See `.env.example` for the full list.
 
----
-
-## 6. Migrations
-
-```bash
-# Create a new migration during development
-cd backend
-npx prisma migrate dev --name <description>
-
-# Apply pending migrations to any target DB (staging/prod) without prompting
-DATABASE_URL=<target-db-url> npx prisma migrate deploy
-```
-
-Never run `migrate dev` against production — it can prompt for destructive resets. `migrate deploy` only applies pending migration files.
+Since `/admin` only gates by Firebase Auth + a Firestore role check (no network-level restriction), consider also putting Vercel's password protection in front of the whole deployment, or restricting who you hand out ADMIN Firestore roles to.
 
 ---
 
-## 7. Rollback
+## 3. Firebase project setup
 
-- **API/worker (Railway):** Railway keeps prior deployments — use the dashboard's "Redeploy" on the last-known-good build, or `railway rollback` via CLI.
-- **Frontend/CMS (Vercel):** every deploy is a preserved, immutable deployment — promote a previous one to production from the Vercel dashboard's Deployments tab, or `vercel rollback`.
-- **Database:** Prisma migrations are forward-only by default. To roll back a migration, write and apply a new migration that reverses the change — don't hand-edit `_prisma_migrations`. Keep a recent Postgres backup (Railway plugin has automatic backups) before any schema change that drops columns/tables.
-- **Storage (R2):** enable R2 bucket versioning if you need to recover overwritten/deleted audio files.
+1. **Auth**: Firebase Console → Authentication → enable **Email/Password** sign-in. Create your admin user(s) there (Authentication → Users → Add user).
+2. **Firestore**: Firebase Console → Firestore Database → create the database (production mode).
+3. **Storage**: Firebase Console → Storage → create the default bucket.
+4. **Security rules**: paste `firestore.rules` into Firestore → Rules, and `storage.rules` into Storage → Rules (Publish both). Or, from a machine that can run `firebase login` (this sandbox's outbound proxy blocks Firebase's CLI auth endpoint, so it has to be done from your own machine):
+   ```bash
+   firebase deploy --only firestore:rules,firestore:indexes,storage
+   ```
+5. **Admin role**: for each admin user, create a Firestore doc at `users/{uid}` (UID from step 1) with `{ name, email, role: "ADMIN" }`. Without this doc, `/admin` login succeeds against Firebase Auth but is immediately signed back out — see `src/admin/store/authStore.js`.
+6. **Composite index**: the app's published-episodes query (`status == 'PUBLISHED'` + order by `createdAt`) needs the composite index defined in `firestore.indexes.json`. Deploying indexes via the CLI creates it, or Firestore will show a one-click "create index" link in the browser console the first time that query runs without it.
 
 ---
 
-## 8. Troubleshooting
+## 4. Data model (Firestore collections)
+
+| Collection | Written by | Notes |
+|---|---|---|
+| `episodes` | Admin CMS (`/admin/episodes`, `/admin/audio`) | `status` field (`DRAFT`/`PROCESSING`/`READY`/`PUBLISHED`/`UNPUBLISHED`); `audioUrl`/`audioPath` set by Storage upload |
+| `scholars`, `series`, `topics` | Admin CMS | Public read |
+| `rights` | Admin CMS | Admin-only, drives the "blocked" state on Episodes when EXPIRED/REVOKED |
+| `featured` | Admin CMS | Ordered by `position` |
+| `settings` | Admin CMS (singleton doc `settings/app`) | |
+| `users/{uid}` | Manual (Firebase Console) for admins; self-created (non-admin) on first sign-in elsewhere if you add that flow | `role` field gates `/admin` |
+| `users/{uid}/bookmarks`, `users/{uid}/history` | Not yet written by any UI | Read by `src/api/client.js`'s `getBookmarks`/`getHistory`; the public app has no sign-in flow yet, so these stay empty until one's added |
+
+Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired up end-to-end — see Known gaps) under `images/**`.
+
+---
+
+## 5. Rollback
+
+- **App (Vercel):** every deploy is a preserved, immutable deployment — promote a previous one to production from the Vercel dashboard's Deployments tab, or `vercel rollback`.
+- **Firestore data:** no automatic versioning — if you need point-in-time recovery, enable scheduled Firestore backups (Firebase Console → Firestore → Backups) before you need them.
+- **Firestore/Storage rules:** re-publish an earlier version of `firestore.rules`/`storage.rules` from git history; the Firebase Console also keeps a rules version history under Rules → History.
+
+---
+
+## 6. Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `docker compose up` fails with "port already allocated" | Another local stack using 5432/6379/9000 | Check `docker ps -a`; either stop the conflicting container or remap the host port in `docker-compose.yml` |
-| API container crash-loops on `Cannot find module '@nestjs/throttler'` (or similar) after a dependency change | Bind-mounted `node_modules` volume is stale relative to `package.json` | `docker exec <container> npm ci` then restart the container |
-| `PrismaClient did not initialize yet` | Prisma client wasn't generated inside the container (separate volume from host) | `docker exec <container> npx prisma generate`, restart |
-| `/health` returns `redis: false` | `REDIS_URL` wrong, or Redis plugin not attached | Check env var matches the Railway Redis plugin's connection string |
-| Episode publish blocked unexpectedly | Rights record for that scholar is `EXPIRED`/`REVOKED` | Working as intended — this is enforced both in the CMS UI and the API (`episodes.service.ts`). Update or add a `Rights` record for the scholar via the CMS Rights page |
-| Frontend/CMS shows stale data after a CMS edit | Redis cache (`episodes:*`, `home:*`, `topics:*`) not invalidated | Should self-invalidate on create/update/delete/publish — if not, check the mutating endpoint actually calls `CacheService.invalidatePrefix` |
-| Audio upload succeeds but episode stays `PROCESSING` | Worker not running, or `ffmpeg`/`ffprobe` missing from its image | Confirm the worker service is up (`docker logs tamil_audio_worker` / Railway logs) and its Dockerfile installed `ffmpeg` |
-| CORS errors from frontend/CMS in production | `CORS_ORIGINS` unset or missing that origin | Set `CORS_ORIGINS` on the API service to a comma-separated list including the exact frontend/CMS origins |
-| 429 Too Many Requests | Rate limiter (120 req/min per IP, `@nestjs/throttler`) tripped | Expected under abuse; if a legitimate client hits it, raise the limit in `app.module.ts`'s `ThrottlerModule.forRoot` |
+| `/admin` login succeeds then immediately bounces to `/admin/login` | No `users/{uid}` Firestore doc, or `role` isn't exactly `"ADMIN"` | Create/fix the doc — see §3 step 5 |
+| Reading/writing any collection throws `permission-denied` | Firestore rules not published yet, or the signed-in user doesn't satisfy them | Publish `firestore.rules`; check the specific collection's rule in that file |
+| Refreshing `/admin/episodes` (or any non-root path) on Vercel 404s | SPA rewrite missing | Confirm `vercel.json`'s rewrite is present and the Vercel project is using the repo root, not a subdirectory |
+| Query throws "The query requires an index" | Missing the composite index from `firestore.indexes.json` | Click the link in the error, or deploy indexes via the CLI |
+| Episode publish blocked unexpectedly | Rights record for that scholar is `EXPIRED`/`REVOKED` | Working as intended — update/add a `Rights` record for the scholar via `/admin/rights` |
+| Audio upload finishes but episode never shows a working `audioUrl` | Storage rules blocking the write, or the upload never completed | Check the browser console for a Storage `permission-denied`; confirm `storage.rules` is published and the signed-in user has `role: "ADMIN"` |
 
 ---
 
 ## Known gaps (not hidden, just not built yet)
 
-- Topics has no edit/delete API — CMS only supports create + list for it.
-- Thumbnail/image upload fields in the CMS are preview-only; no backend storage wiring for images yet (only audio goes through the real upload → worker → R2/MinIO path).
-- No job-status polling UI in the CMS Audio page beyond the initial upload progress bar — the worker updates the episode's `status` field (`PROCESSING` → `READY`), but there's no live "your file is being transcoded" indicator yet.
+- The public app (`/`, `/library`, `/browse`, `/quran`) has no sign-in UI — `getBookmarks`/`getHistory` only return data once *some* Firebase Auth session exists, which currently nothing in the public app creates.
+- Image upload (`src/admin/components/ImageUpload.jsx`) previews locally but isn't wired to actually upload to Storage yet — only audio files (`src/admin/api/client.js`'s `audioApi.upload`) are.
+- Topics only supports create + list from the CMS — no edit/delete UI or backend call for it yet.
+- `backend/` (the old Node/Prisma API) still exists in the repo and is still covered by CI, but nothing calls it anymore. Safe to ignore, or remove in a follow-up if you're sure nothing external depends on it.
