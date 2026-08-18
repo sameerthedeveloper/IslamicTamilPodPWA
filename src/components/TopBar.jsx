@@ -2,7 +2,7 @@
 function TopBar() {
   return (
         <header
-            className="pt-10 sticky top-0 z-50 flex min-h-20 shrink-0 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur">
+            className=" sticky top-0 z-50 flex min-h-20 shrink-0 items-center justify-between border-b border-gray-200 bg-gray-100/95 px-5 shadow-sm backdrop-blur pt-10 pb-4">
 
 
             <div>
