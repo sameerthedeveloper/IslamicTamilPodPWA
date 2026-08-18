@@ -1,100 +1,156 @@
-import axios from 'axios'
-import { useAuthStore } from '../store/authStore'
+import {
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  getCountFromServer,
+  query,
+  orderBy,
+} from 'firebase/firestore'
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../firebase'
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
-
-export const api = axios.create({ baseURL })
-
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      useAuthStore.getState().logout()
-    }
-    return Promise.reject(err)
-  },
-)
-
-export async function login(email, password) {
-  const { data } = await api.post('/auth/login', { email, password })
-  return data
+function withId(snap) {
+  return { id: snap.id, ...snap.data() }
 }
 
-// Episodes — full CRUD (backend supports it)
+async function listAll(name, sortField = 'createdAt') {
+  const snap = await getDocs(query(collection(db, name), orderBy(sortField, 'desc')))
+  return snap.docs.map(withId)
+}
+
+async function listPaged(name, page = 1, limit = 50, sortField = 'createdAt') {
+  // Firestore doesn't offset-paginate cheaply; admin lists here are small
+  // enough to fetch in full and slice client-side.
+  const all = await listAll(name, sortField)
+  const start = (page - 1) * limit
+  return { data: all.slice(start, start + limit), total: all.length, page, limit }
+}
+
+async function createDoc(name, data) {
+  const ref_ = await addDoc(collection(db, name), { ...data, createdAt: Date.now() })
+  return { id: ref_.id, ...data }
+}
+
+async function updateDocById(name, id, data) {
+  await updateDoc(doc(db, name, id), data)
+  return { id, ...data }
+}
+
+async function removeDoc(name, id) {
+  await deleteDoc(doc(db, name, id))
+  return { id }
+}
+
+// Episodes — full CRUD
 export const episodesApi = {
-  // /episodes/admin returns all statuses (not just PUBLISHED, unlike the public /episodes list)
-  list: (page = 1, limit = 50) => api.get('/episodes/admin', { params: { page, limit } }).then((r) => r.data),
-  get: (id) => api.get(`/episodes/${id}`).then((r) => r.data),
-  create: (data) => api.post('/episodes/admin', data).then((r) => r.data),
-  update: (id, data) => api.patch(`/episodes/admin/${id}`, data).then((r) => r.data),
-  remove: (id) => api.delete(`/episodes/admin/${id}`).then((r) => r.data),
+  list: (page = 1, limit = 50) => listPaged('episodes', page, limit),
+  get: async (id) => withId(await getDoc(doc(db, 'episodes', id))),
+  create: (data) => createDoc('episodes', data),
+  update: (id, data) => updateDocById('episodes', id, data),
+  remove: (id) => removeDoc('episodes', id),
 }
 
 // Scholars — create/list/update/delete
 export const scholarsApi = {
-  list: () => api.get('/scholars/admin').then((r) => r.data),
-  create: (data) => api.post('/scholars/admin', data).then((r) => r.data),
-  update: (id, data) => api.patch(`/scholars/admin/${id}`, data).then((r) => r.data),
-  remove: (id) => api.delete(`/scholars/admin/${id}`).then((r) => r.data),
+  list: () => listAll('scholars', 'name'),
+  create: (data) => createDoc('scholars', data),
+  update: (id, data) => updateDocById('scholars', id, data),
+  remove: (id) => removeDoc('scholars', id),
 }
 
 // Series — create/list/update/delete
 export const seriesApi = {
-  list: (page = 1, limit = 50) => api.get('/series/admin', { params: { page, limit } }).then((r) => r.data),
-  create: (data) => api.post('/series/admin', data).then((r) => r.data),
-  update: (id, data) => api.patch(`/series/admin/${id}`, data).then((r) => r.data),
-  remove: (id) => api.delete(`/series/admin/${id}`).then((r) => r.data),
+  list: (page = 1, limit = 50) => listPaged('series', page, limit),
+  create: (data) => createDoc('series', data),
+  update: (id, data) => updateDocById('series', id, data),
+  remove: (id) => removeDoc('series', id),
 }
 
-// Topics — create/list only (no backend edit/delete yet)
+// Topics — create/list only
 export const topicsApi = {
-  list: () => api.get('/topics').then((r) => r.data),
-  create: (data) => api.post('/topics/admin', data).then((r) => r.data),
+  list: () => listAll('topics', 'name'),
+  create: (data) => createDoc('topics', data),
 }
 
+// Audio — upload a file to Storage and store its URL on the episode doc
 export const audioApi = {
-  upload: (episodeId, file, onProgress) => {
-    const form = new FormData()
-    form.append('episodeId', episodeId)
-    form.append('file', file)
-    return api
-      .post('/audio/admin/upload', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (e) => onProgress?.(Math.round((e.loaded / e.total) * 100)),
-      })
-      .then((r) => r.data)
-  },
+  upload: (episodeId, file, onProgress) =>
+    new Promise((resolve, reject) => {
+      const path = `audio/${episodeId}/${Date.now()}-${file.name}`
+      const storageRef = ref(storage, path)
+      const task = uploadBytesResumable(storageRef, file)
+
+      task.on(
+        'state_changed',
+        (snapshot) => {
+          onProgress?.(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100))
+        },
+        reject,
+        async () => {
+          const url = await getDownloadURL(task.snapshot.ref)
+          await updateDoc(doc(db, 'episodes', episodeId), {
+            audioUrl: url,
+            audioPath: path,
+            status: 'READY',
+          })
+          resolve({ url })
+        },
+      )
+    }),
 }
 
 export const rightsApi = {
-  list: () => api.get('/admin/rights').then((r) => r.data),
-  create: (data) => api.post('/admin/rights', data).then((r) => r.data),
-  update: (id, data) => api.patch(`/admin/rights/${id}`, data).then((r) => r.data),
-  remove: (id) => api.delete(`/admin/rights/${id}`).then((r) => r.data),
+  list: () => listAll('rights'),
+  create: (data) => createDoc('rights', data),
+  update: (id, data) => updateDocById('rights', id, data),
+  remove: (id) => removeDoc('rights', id),
 }
 
 export const featuredApi = {
-  list: () => api.get('/admin/featured').then((r) => r.data),
-  create: (data) => api.post('/admin/featured', data).then((r) => r.data),
-  update: (id, data) => api.patch(`/admin/featured/${id}`, data).then((r) => r.data),
-  remove: (id) => api.delete(`/admin/featured/${id}`).then((r) => r.data),
+  list: () => listAll('featured', 'position'),
+  create: async (data) => {
+    const existing = await listAll('featured', 'position')
+    const position = existing.length
+    return createDoc('featured', { ...data, position })
+  },
+  update: (id, data) => updateDocById('featured', id, data),
+  remove: (id) => removeDoc('featured', id),
 }
 
 export const settingsApi = {
-  get: () => api.get('/admin/settings').then((r) => r.data),
-  update: (data) => api.patch('/admin/settings', data).then((r) => r.data),
+  get: async () => {
+    const snap = await getDoc(doc(db, 'settings', 'app'))
+    return snap.exists() ? snap.data() : {}
+  },
+  update: async (data) => {
+    // merge:true creates the singleton doc on first save, updates it after.
+    await setDoc(doc(db, 'settings', 'app'), data, { merge: true })
+    return data
+  },
 }
 
 export const statsApi = {
-  get: () => api.get('/admin/stats').then((r) => r.data),
+  get: async () => {
+    const [episodes, scholars, series, users] = await Promise.all([
+      getCountFromServer(collection(db, 'episodes')),
+      getCountFromServer(collection(db, 'scholars')),
+      getCountFromServer(collection(db, 'series')),
+      getCountFromServer(collection(db, 'users')),
+    ])
+    return {
+      episodes: episodes.data().count,
+      scholars: scholars.data().count,
+      series: series.data().count,
+      users: users.data().count,
+    }
+  },
 }
 
 export const usersApi = {
-  list: () => api.get('/admin/users').then((r) => r.data),
+  list: () => listAll('users', 'name'),
 }

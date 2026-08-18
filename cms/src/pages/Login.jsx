@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { login as loginApi } from '../api/client'
+import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 
 function Login() {
@@ -8,27 +7,20 @@ function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const token = useAuthStore((s) => s.token)
+  const status = useAuthStore((s) => s.status)
   const user = useAuthStore((s) => s.user)
   const login = useAuthStore((s) => s.login)
-  const navigate = useNavigate()
 
-  if (token && user?.role === 'ADMIN') return <Navigate to="/" replace />
+  if (status === 'ready' && user?.role === 'ADMIN') return <Navigate to="/" replace />
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      const data = await loginApi(email, password)
-      if (data.user.role !== 'ADMIN') {
-        setError('This account does not have admin access.')
-        return
-      }
-      login(data.accessToken, data.user)
-      navigate('/')
+      await login(email, password)
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials.')
+      setError(firebaseAuthErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -91,6 +83,19 @@ function Login() {
       </form>
     </div>
   )
+}
+
+function firebaseAuthErrorMessage(err) {
+  switch (err?.code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'Invalid credentials.'
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Try again later.'
+    default:
+      return err?.message || 'Invalid credentials.'
+  }
 }
 
 export default Login

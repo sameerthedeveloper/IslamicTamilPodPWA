@@ -4,10 +4,18 @@ import { useAuthStore } from '../store/authStore'
 import Sidebar from './Sidebar'
 
 function ProtectedRoute({ children }) {
-  const token = useAuthStore((s) => s.token)
+  const status = useAuthStore((s) => s.status)
   const user = useAuthStore((s) => s.user)
 
-  if (!token || user?.role !== 'ADMIN') {
+  if (status === 'pending') {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ color: 'var(--muted)' }}>
+        Loading…
+      </div>
+    )
+  }
+
+  if (!user || user.role !== 'ADMIN') {
     return <Navigate to="/login" replace />
   }
 

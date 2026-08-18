@@ -1,74 +1,97 @@
-import axios from 'axios'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore'
+import { auth, db } from '../firebase'
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+function withId(snap) {
+  return { id: snap.id, ...snap.data() }
+}
 
-export const api = axios.create({ baseURL })
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
+async function publishedEpisodes() {
+  const snap = await getDocs(
+    query(collection(db, 'episodes'), where('status', '==', 'PUBLISHED'), orderBy('createdAt', 'desc')),
+  )
+  return snap.docs.map(withId)
+}
 
 export async function getEpisodes(page, limit) {
-  // Backend @Query('limit')/@Query('page') aren't coerced to numbers
-  // when passed explicitly (Prisma `take`/`skip` then reject strings),
-  // so omit them to fall through to the service's numeric defaults.
-  const params = {}
-  if (page) params.page = page
-  if (limit) params.limit = limit
-  const { data } = await api.get('/episodes', { params })
-  return data
+  const all = await publishedEpisodes()
+  const p = page || 1
+  const l = limit || all.length
+  const start = (p - 1) * l
+  return { data: all.slice(start, start + l), total: all.length }
 }
 
 export async function getEpisode(id) {
-  const { data } = await api.get(`/episodes/${id}`)
-  return data
+  const snap = await getDoc(doc(db, 'episodes', id))
+  return snap.exists() ? withId(snap) : null
 }
 
 export async function getScholars() {
-  const { data } = await api.get('/scholars')
-  return data
+  const snap = await getDocs(query(collection(db, 'scholars'), orderBy('name')))
+  return snap.docs.map(withId)
 }
 
 export async function getScholar(slug) {
-  const { data } = await api.get(`/scholars/${slug}`)
-  return data
+  const snap = await getDocs(query(collection(db, 'scholars'), where('slug', '==', slug)))
+  return snap.docs[0] ? withId(snap.docs[0]) : null
 }
 
 export async function getTopics() {
-  const { data } = await api.get('/topics')
-  return data
+  const snap = await getDocs(query(collection(db, 'topics'), orderBy('name')))
+  return snap.docs.map(withId)
 }
 
 export async function getSeries(page = 1, limit = 20) {
-  const { data } = await api.get('/series', { params: { page, limit } })
-  return data
+  const snap = await getDocs(query(collection(db, 'series'), orderBy('createdAt', 'desc')))
+  const all = snap.docs.map(withId)
+  const start = (page - 1) * limit
+  return { data: all.slice(start, start + limit), total: all.length }
 }
 
+// Firestore has no full-text search; do a simple client-side title match
+// across the public collections instead.
 export async function search(q, type) {
-  const { data } = await api.get('/search', { params: { q, type } })
-  return data
+  if (!q?.trim()) return []
+  const needle = q.trim().toLowerCase()
+  const collections = type ? [type] : ['episodes', 'scholars', 'series']
+  const results = await Promise.all(
+    collections.map(async (name) => {
+      const snap = await getDocs(collection(db, name))
+      return snap.docs
+        .map(withId)
+        .filter((item) => (item.title || item.name || '').toLowerCase().includes(needle))
+    }),
+  )
+  return results.flat()
 }
 
-export async function getHome(userId) {
-  const { data } = await api.get('/home', { params: userId ? { userId } : {} })
-  return data
+export async function getHome() {
+  const episodes = await publishedEpisodes()
+  return { continueListening: episodes.slice(0, 10), discover: [...episodes].reverse().slice(0, 10) }
 }
 
 export async function getBookmarks() {
-  const { data } = await api.get('/me/bookmarks')
-  return data
+  const user = auth.currentUser
+  if (!user) return []
+  const snap = await getDocs(collection(db, 'users', user.uid, 'bookmarks'))
+  return snap.docs.map(withId)
 }
 
 export async function getHistory(limit = 20) {
-  const { data } = await api.get('/me/history', { params: { limit } })
-  return data
+  const user = auth.currentUser
+  if (!user) return []
+  const snap = await getDocs(query(collection(db, 'users', user.uid, 'history'), orderBy('playedAt', 'desc')))
+  return snap.docs.map(withId).slice(0, limit)
 }
 
-// Stub — no /quran endpoint on backend yet. Shape matches Episode fields.
+// Stub — no Quran collection yet. Shape matches Episode fields.
 export async function getQuranRecitations() {
   return [
     { id: 'q1', title: 'Al-Fathiha', scholar: { name: 'The Beginning' }, thumbnail: null },

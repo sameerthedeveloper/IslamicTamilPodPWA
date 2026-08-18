@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { BookX } from 'lucide-react'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '../firebase'
 import { getBookmarks, getHistory } from '../api/client'
 
 function LibraryPage() {
@@ -7,11 +9,16 @@ function LibraryPage() {
   const [history, setHistory] = useState([])
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
-
-    getBookmarks().then(setBookmarks).catch(() => setBookmarks([]))
-    getHistory().then(setHistory).catch(() => setHistory([]))
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setBookmarks([])
+        setHistory([])
+        return
+      }
+      getBookmarks().then(setBookmarks).catch(() => setBookmarks([]))
+      getHistory().then(setHistory).catch(() => setHistory([]))
+    })
+    return unsubscribe
   }, [])
 
   const isEmpty = bookmarks.length === 0 && history.length === 0
