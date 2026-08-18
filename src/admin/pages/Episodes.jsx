@@ -7,6 +7,7 @@ import FormModal from '../components/FormModal'
 import SearchableSelect from '../components/SearchableSelect'
 import ImageUpload from '../components/ImageUpload'
 import { episodesApi, scholarsApi, seriesApi, topicsApi, rightsApi } from '../api/client'
+import { extractYoutubeId, fetchYoutubeMetadata } from '../../utils/youtube'
 
 const STATUSES = ['DRAFT', 'PROCESSING', 'READY', 'PUBLISHED', 'UNPUBLISHED']
 
@@ -17,6 +18,7 @@ const emptyForm = {
   seriesId: '',
   topics: [],
   description: '',
+  youtubeUrl: '',
   status: 'DRAFT',
 }
 
@@ -30,6 +32,8 @@ function Episodes() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [ytPreview, setYtPreview] = useState(null)
+  const [ytLoading, setYtLoading] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -54,6 +58,7 @@ function Episodes() {
 
   const openCreate = () => {
     setForm(emptyForm)
+    setYtPreview(null)
     setError('')
     setModalOpen(true)
   }
@@ -66,10 +71,29 @@ function Episodes() {
       seriesId: ep.seriesId ?? '',
       topics: ep.topics?.map((t) => t.topic.name) ?? [],
       description: ep.description ?? '',
+      youtubeUrl: ep.youtubeId ?? '',
       status: ep.status,
     })
+    setYtPreview(ep.youtubeId ? { thumbnail: ep.thumbnail } : null)
     setError('')
     setModalOpen(true)
+  }
+
+  const handleYoutubeUrlChange = async (value) => {
+    setForm((f) => ({ ...f, youtubeUrl: value }))
+    setYtPreview(null)
+    const youtubeId = extractYoutubeId(value)
+    if (!youtubeId) return
+    setYtLoading(true)
+    try {
+      const meta = await fetchYoutubeMetadata(youtubeId)
+      setYtPreview({ youtubeId, ...meta })
+      setForm((f) => ({ ...f, title: f.title || meta.title }))
+    } catch {
+      setError("Couldn't fetch video info — check the link.")
+    } finally {
+      setYtLoading(false)
+    }
   }
 
   const submit = async () => {
@@ -80,6 +104,7 @@ function Episodes() {
       return
     }
 
+    const youtubeId = extractYoutubeId(form.youtubeUrl)
     const payload = {
       title: form.title,
       scholarId: form.scholarId,
@@ -87,6 +112,9 @@ function Episodes() {
       topics: form.topics,
       description: form.description || undefined,
       status: form.status,
+      sourceType: youtubeId ? 'YOUTUBE' : 'UPLOAD',
+      youtubeId: youtubeId ?? null,
+      ...(ytPreview?.thumbnail && { thumbnail: ytPreview.thumbnail }),
     }
 
     try {
@@ -252,6 +280,29 @@ function Episodes() {
             ))}
             {topics.length === 0 && <p className="text-xs" style={{ color: 'var(--muted)' }}>No topics yet.</p>}
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>YouTube link (optional)</label>
+          <input
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=…"
+            value={form.youtubeUrl}
+            onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+            className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+            style={{ border: '1px solid var(--border)' }}
+          />
+          <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>
+            {ytLoading
+              ? 'Fetching video info…'
+              : 'Plays audio-only in the app via a hidden player — no upload needed.'}
+          </p>
+          {ytPreview?.thumbnail && (
+            <div className="mt-2 flex items-center gap-2 rounded-xl p-2" style={{ border: '1px solid var(--border)' }}>
+              <img src={ytPreview.thumbnail} alt="" className="h-10 w-10 rounded-lg object-cover" />
+              <p className="truncate text-xs" style={{ color: 'var(--ink)' }}>{ytPreview.title ?? 'YouTube video linked'}</p>
+            </div>
+          )}
         </div>
 
         <div>

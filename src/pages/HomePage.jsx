@@ -44,7 +44,7 @@ function HomePage() {
     }, [])
 
     return (
-        <div className="px-5 pb-8 pt-6">
+        <div className="px-5 pb-8 pt-6 mt-30">
 
             <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                 Assalamu Alaikum
