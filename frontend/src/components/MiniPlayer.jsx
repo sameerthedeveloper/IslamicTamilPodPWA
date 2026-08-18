@@ -59,7 +59,8 @@ function MiniPlayer() {
 
                 <button
                     onClick={(e) => { e.stopPropagation(); togglePlay() }}
-                    className="flex size-10 items-center justify-center rounded-full bg-gray-900 text-white transition hover:bg-gray-700"
+                    className="flex size-10 items-center justify-center rounded-full text-white transition hover:opacity-90"
+                    style={{ background: 'var(--accent)' }}
                     aria-label="Play or pause">
                     {isPlaying ? <Pause size={18} strokeWidth={3}/> : <Play size={18} strokeWidth={3}/>}
                 </button>

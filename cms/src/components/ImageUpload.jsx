@@ -17,7 +17,7 @@ function ImageUpload({ value, onChange }) {
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]) }}
       onClick={() => inputRef.current?.click()}
-      className="relative flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md text-center"
+      className="relative flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl text-center"
       style={{ border: '1.5px dashed var(--border)', background: 'var(--base)' }}
     >
       <input
@@ -29,7 +29,7 @@ function ImageUpload({ value, onChange }) {
       />
       {preview ? (
         <>
-          <img src={preview} alt="" className="absolute inset-0 h-full w-full rounded-md object-cover" />
+          <img src={preview} alt="" className="absolute inset-0 h-full w-full rounded-xl object-cover" />
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setPreview(null); onChange?.(null, null) }}

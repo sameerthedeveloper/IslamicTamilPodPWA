@@ -60,14 +60,14 @@ function FullPlayerSheet() {
           {currentEpisode.thumbnail ? (
             <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
           ) : (
-            <span className="font-serif text-7xl text-white/90">
+            <span className="text-7xl font-bold text-white/90">
               {currentEpisode.title?.[0] ?? 'I'}
             </span>
           )}
         </div>
 
         <div className="mt-10 w-full max-w-sm">
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-gray-900 truncate">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 truncate">
             {currentEpisode.title ?? 'Title'}
           </h1>
           <p className="mt-1 text-sm text-gray-500 truncate">
@@ -82,9 +82,10 @@ function FullPlayerSheet() {
             max={duration || 0}
             value={currentTime}
             onChange={(e) => seek(Number(e.target.value))}
-            className="w-full accent-gray-900 h-1 cursor-pointer"
+            className="w-full h-1 cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #111827 ${pct}%, #e5e7eb ${pct}%)`,
+              accentColor: 'var(--accent)',
+              background: `linear-gradient(to right, var(--accent) ${pct}%, #e5e7eb ${pct}%)`,
             }}
             aria-label="Seek"
           />
@@ -102,7 +103,8 @@ function FullPlayerSheet() {
 
           <button
             onClick={togglePlay}
-            className="flex size-16 items-center justify-center rounded-full bg-gray-900 text-white shadow-lg transition hover:bg-gray-700"
+            className="flex size-16 items-center justify-center rounded-full text-white shadow-lg transition hover:opacity-90"
+            style={{ background: 'var(--accent)' }}
             aria-label="Play or pause">
             {isPlaying ? <Pause size={28} strokeWidth={2.5} /> : <Play size={28} strokeWidth={2.5} />}
           </button>

@@ -46,7 +46,7 @@ function FormModal({ open, title, onClose, onSubmit, submitLabel = 'Save', child
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-md px-4 py-2 text-sm font-medium"
+              className="flex-1 rounded-xl px-4 py-2 text-sm font-medium"
               style={{ border: '1px solid var(--border)', color: 'var(--ink)' }}
             >
               Cancel
@@ -54,7 +54,7 @@ function FormModal({ open, title, onClose, onSubmit, submitLabel = 'Save', child
             <button
               type="submit"
               disabled={submitDisabled}
-              className="flex-1 rounded-md px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-40"
+              className="flex-1 rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-40"
               style={{ background: 'var(--accent)' }}
             >
               {submitLabel}

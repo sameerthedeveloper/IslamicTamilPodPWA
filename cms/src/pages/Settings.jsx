@@ -36,26 +36,26 @@ function Settings() {
         {!form ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : (
-          <form onSubmit={submit} className="space-y-4 rounded-lg p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <form onSubmit={submit} className="space-y-4 rounded-2xl p-6" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div>
               <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Site name</label>
-              <input value={form.siteName} onChange={(e) => setForm((f) => ({ ...f, siteName: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
+              <input value={form.siteName} onChange={(e) => setForm((f) => ({ ...f, siteName: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Description</label>
-              <textarea rows={2} value={form.siteDescription} onChange={(e) => setForm((f) => ({ ...f, siteDescription: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
+              <textarea rows={2} value={form.siteDescription} onChange={(e) => setForm((f) => ({ ...f, siteDescription: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Default bitrate (kbps)</label>
-              <input type="number" value={form.defaultBitrate} onChange={(e) => setForm((f) => ({ ...f, defaultBitrate: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none font-data" style={{ border: '1px solid var(--border)' }} />
+              <input type="number" value={form.defaultBitrate} onChange={(e) => setForm((f) => ({ ...f, defaultBitrate: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none font-data" style={{ border: '1px solid var(--border)' }} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Max upload size (bytes)</label>
-              <input type="number" value={form.maxUploadSize} onChange={(e) => setForm((f) => ({ ...f, maxUploadSize: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none font-data" style={{ border: '1px solid var(--border)' }} />
+              <input type="number" value={form.maxUploadSize} onChange={(e) => setForm((f) => ({ ...f, maxUploadSize: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none font-data" style={{ border: '1px solid var(--border)' }} />
               <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>{(form.maxUploadSize / (1024 * 1024)).toFixed(0)} MB</p>
             </div>
             <div className="flex items-center gap-3 pt-2">
-              <button type="submit" disabled={saving} className="rounded-md px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
+              <button type="submit" disabled={saving} className="rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--accent)' }}>
                 {saving ? 'Saving…' : 'Save settings'}
               </button>
               {saved && <span className="text-xs" style={{ color: 'var(--accent)' }}>Saved.</span>}

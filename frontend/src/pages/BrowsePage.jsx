@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Mic, BookOpen, GraduationCap, Users } from 'lucide-react'
 import { getTopics, search as searchApi } from '../api/client'
 
-const ICONS = ['fa-microphone', 'fa-book-quran', 'fa-graduation-cap', 'fa-users']
+const ICONS = [Mic, BookOpen, GraduationCap, Users]
 
 function BrowsePage() {
     const [topics, setTopics] = useState([])
@@ -51,8 +51,7 @@ function BrowsePage() {
                     onChange={(e) => setQuery(e.target.value)}
                     className="w-full outline-none ring-0 focus:outline-none focus:ring-0"
                     placeholder="Search..." />
-                <i className="fa-solid fa-magnifying-glass"></i>
-                <Search/>
+                <Search size={18} className="text-gray-400" />
 
             </div>
 
@@ -88,17 +87,20 @@ function BrowsePage() {
                         </div>
                     )}
 
-                    {topics.map((topic, i) => (
-                        <div key={topic.id ?? topic.name} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                    {topics.map((topic, i) => {
+                        const Icon = ICONS[i % ICONS.length]
+                        return (
+                            <div key={topic.id ?? topic.name} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
 
-                            <i className={`fa-solid ${ICONS[i % ICONS.length]} text-xl`}></i>
+                                <Icon size={20} style={{ color: 'var(--accent)' }} />
 
-                            <p className="mt-3 font-medium">
-                                {topic.name}
-                            </p>
+                                <p className="mt-3 font-medium">
+                                    {topic.name}
+                                </p>
 
-                        </div>
-                    ))}
+                            </div>
+                        )
+                    })}
 
                 </div>
 

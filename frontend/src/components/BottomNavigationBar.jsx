@@ -23,9 +23,10 @@ function BottomNavigationBar({ active, set }) {
                             onClick={() => set(tab.id)}
                             className={`flex py-4 flex-col items-center justify-center gap-1 rounded-full px-2 transition-all duration-200 ${
                                 isActive
-                                    ? 'bg-gray-900 text-white shadow-sm'
+                                    ? 'text-white shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950'
                             }`}
+                            style={isActive ? { background: 'var(--accent)' } : undefined}
                         >
                             <Icon size={17} strokeWidth={3} />
                             <span className="text-[11px] font-medium leading-none">

@@ -8,7 +8,7 @@ function SearchableSelect({ options, value, onChange, placeholder = 'Select…',
   const filtered = useMemo(() => {
     if (!query.trim()) return options
     return options.filter((o) => getLabel(o).toLowerCase().includes(query.toLowerCase()))
-  }, [options, query])
+  }, [options, query, getLabel])
 
   const selected = options.find((o) => getValue(o) === value)
 
@@ -17,7 +17,7 @@ function SearchableSelect({ options, value, onChange, placeholder = 'Select…',
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm"
         style={{ border: '1px solid var(--border)', background: 'var(--surface)', color: selected ? 'var(--ink)' : 'var(--muted)' }}
       >
         {selected ? getLabel(selected) : placeholder}
@@ -26,7 +26,7 @@ function SearchableSelect({ options, value, onChange, placeholder = 'Select…',
 
       {open && (
         <div
-          className="absolute z-10 mt-1 w-full overflow-hidden rounded-md"
+          className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(28,25,23,0.12)' }}
         >
           <input

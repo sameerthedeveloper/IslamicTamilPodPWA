@@ -9,7 +9,7 @@ function QuranCard({title,subtitle}) {
 
 
 
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-900 text-white">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full text-white" style={{ background: 'var(--accent)' }}>
                             <PlayIcon/>
 
 

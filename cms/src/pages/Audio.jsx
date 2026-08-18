@@ -40,7 +40,7 @@ function Audio() {
         </p>
 
         <div
-          className="mb-6 flex flex-col gap-3 rounded-lg p-6"
+          className="mb-6 flex flex-col gap-3 rounded-2xl p-6"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
           <div className="max-w-xs">
@@ -52,7 +52,7 @@ function Audio() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]) }}
             onClick={() => episodeId && inputRef.current?.click()}
-            className="flex h-28 flex-col items-center justify-center gap-1.5 rounded-md text-center"
+            className="flex h-28 flex-col items-center justify-center gap-1.5 rounded-xl text-center"
             style={{
               border: '1.5px dashed var(--border)',
               background: 'var(--base)',
@@ -69,7 +69,7 @@ function Audio() {
         </div>
 
         {queue.length > 0 && (
-          <div className="rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {queue.map((j, i) => (
               <div key={j.id} className="px-5 py-3" style={i < queue.length - 1 ? { borderBottom: '1px solid var(--border)' } : undefined}>
                 <div className="flex items-center justify-between">

@@ -53,7 +53,7 @@ function Featured() {
       <TopBar crumb="Content" title="Featured" />
       <main className="max-w-2xl px-8 py-6">
         <div className="mb-4 flex justify-end">
-          <button onClick={() => setModalOpen(true)} className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+          <button onClick={() => setModalOpen(true)} className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> Add episode
           </button>
         </div>
@@ -61,12 +61,12 @@ function Featured() {
         {loading ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-lg py-16" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl py-16" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <Inbox size={22} style={{ color: 'var(--muted)' }} />
             <p className="text-sm" style={{ color: 'var(--muted)' }}>Nothing featured yet.</p>
           </div>
         ) : (
-          <div className="rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {items.map((item, i) => (
               <div
                 key={item.id}

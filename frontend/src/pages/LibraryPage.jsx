@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { BookX } from 'lucide-react'
 import { getBookmarks, getHistory } from '../api/client'
 
 function LibraryPage() {
@@ -29,7 +30,7 @@ function LibraryPage() {
                 {isEmpty && (
                     <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-6 text-center">
 
-                        <i className="fa-solid fa-book text-3xl text-gray-400"></i>
+                        <BookX size={32} className="mx-auto text-gray-400" />
 
                         <p className="mt-4 font-medium text-gray-900">
                             Your Library is Empty

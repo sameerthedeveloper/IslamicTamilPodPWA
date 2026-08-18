@@ -20,7 +20,8 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
   }, [rows, sortKey, sortDir])
 
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
-  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const safePage = Math.min(page, pageCount)
+  const pageRows = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   const toggleSort = (key) => {
     if (sortKey === key) {
@@ -34,7 +35,7 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
   if (rows.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-2 rounded-lg py-16"
+        className="flex flex-col items-center justify-center gap-2 rounded-2xl py-16"
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <Inbox size={22} style={{ color: 'var(--muted)' }} />
@@ -44,7 +45,7 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
   }
 
   return (
-    <div className="rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+    <div className="rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -89,11 +90,11 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
           className="flex items-center justify-between px-5 py-3 text-xs"
           style={{ borderTop: '1px solid var(--border)', color: 'var(--muted)' }}
         >
-          <span>Page {page} of {pageCount}</span>
+          <span>Page {safePage} of {pageCount}</span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={safePage === 1}
               className="rounded px-2 py-1 font-medium disabled:opacity-40"
               style={{ border: '1px solid var(--border)' }}
             >
@@ -101,7 +102,7 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
             </button>
             <button
               onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-              disabled={page === pageCount}
+              disabled={safePage === pageCount}
               className="rounded px-2 py-1 font-medium disabled:opacity-40"
               style={{ border: '1px solid var(--border)' }}
             >

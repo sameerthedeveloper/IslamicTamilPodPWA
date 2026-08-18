@@ -52,7 +52,7 @@ function Scholars() {
         <div className="mb-4 flex justify-end">
           <button
             onClick={openCreate}
-            className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white"
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white"
             style={{ background: 'var(--accent)' }}
           >
             <Plus size={15} /> New scholar
@@ -63,7 +63,7 @@ function Scholars() {
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : scholars.length === 0 ? (
           <div
-            className="flex flex-col items-center justify-center gap-2 rounded-lg py-16"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl py-16"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
           >
             <Inbox size={22} style={{ color: 'var(--muted)' }} />
@@ -72,10 +72,10 @@ function Scholars() {
         ) : (
           <div className="grid grid-cols-4 gap-4">
             {scholars.map((s) => (
-              <div key={s.id} className="rounded-lg p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <div className="flex h-24 items-center justify-center rounded-md" style={{ background: 'var(--base)' }}>
+              <div key={s.id} className="rounded-2xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="flex h-24 items-center justify-center rounded-xl" style={{ background: 'var(--base)' }}>
                   {s.image ? (
-                    <img src={s.image} alt="" className="h-full w-full rounded-md object-cover" />
+                    <img src={s.image} alt="" className="h-full w-full rounded-xl object-cover" />
                   ) : (
                     <span className="font-data text-2xl" style={{ color: 'var(--muted)' }}>{s.name?.[0]}</span>
                   )}
@@ -109,7 +109,7 @@ function Scholars() {
             required
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="w-full rounded-md px-3 py-2 text-sm outline-none"
+            className="w-full rounded-xl px-3 py-2 text-sm outline-none"
             style={{ border: '1px solid var(--border)' }}
           />
           <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>Slug is auto-generated from the name.</p>
@@ -121,7 +121,7 @@ function Scholars() {
             rows={4}
             value={form.biography}
             onChange={(e) => setForm((f) => ({ ...f, biography: e.target.value }))}
-            className="w-full rounded-md px-3 py-2 text-sm outline-none"
+            className="w-full rounded-xl px-3 py-2 text-sm outline-none"
             style={{ border: '1px solid var(--border)' }}
           />
         </div>
@@ -138,7 +138,7 @@ function Scholars() {
             <select
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              className="w-full rounded-md px-3 py-2 text-sm outline-none"
+              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
               style={{ border: '1px solid var(--border)' }}
             >
               <option value="ACTIVE">ACTIVE</option>

@@ -39,7 +39,7 @@ function Sidebar() {
     >
       <div className="flex h-16 items-center gap-2 px-5" style={{ borderBottom: '1px solid var(--border)' }}>
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold text-white"
           style={{ background: 'var(--accent)' }}
         >
           T
@@ -57,7 +57,7 @@ function Sidebar() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              `mb-0.5 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors border-l-2 ${
+              `mb-0.5 flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors border-l-2 ${
                 isActive ? '' : 'border-transparent hover:bg-[var(--base)]'
               }`
             }
@@ -80,7 +80,7 @@ function Sidebar() {
         </div>
         <button
           onClick={logout}
-          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition hover:bg-[var(--base)]"
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[var(--base)]"
           style={{ color: 'var(--muted)' }}
         >
           <LogOut size={16} strokeWidth={2.25} />

@@ -73,7 +73,7 @@ function Rights() {
       <TopBar crumb="Compliance" title="Rights" />
       <main className="px-8 py-6">
         <div className="mb-4 flex justify-end">
-          <button onClick={openCreate} className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+          <button onClick={openCreate} className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> New rights record
           </button>
         </div>
@@ -130,7 +130,7 @@ function Rights() {
       >
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Owner</label>
-          <input required value={form.owner} onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
+          <input required value={form.owner} onChange={(e) => setForm((f) => ({ ...f, owner: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Scholar</label>
@@ -138,11 +138,11 @@ function Rights() {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>License expiry</label>
-          <input type="date" value={form.licenseExpiry} onChange={(e) => setForm((f) => ({ ...f, licenseExpiry: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
+          <input type="date" value={form.licenseExpiry} onChange={(e) => setForm((f) => ({ ...f, licenseExpiry: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }} />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Status</label>
-          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="w-full rounded-md px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
+          <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))} className="w-full rounded-xl px-3 py-2 text-sm outline-none" style={{ border: '1px solid var(--border)' }}>
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>

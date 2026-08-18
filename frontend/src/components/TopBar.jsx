@@ -8,7 +8,7 @@ function TopBar() {
 
             <div>
 
-                <p className="font-serif text-xl font-semibold text-gray-900">
+                <p className="text-xl font-bold tracking-tight text-gray-900">
                     Tamil Islamic Podcast
                 </p>
 
@@ -19,7 +19,8 @@ function TopBar() {
             </div>
 
             <button
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-100">
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-white text-sm font-semibold shadow-sm transition hover:bg-gray-100"
+                style={{ color: 'var(--accent)' }}>
                 U
             </button>
 

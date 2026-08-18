@@ -38,11 +38,11 @@ function Login() {
     <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--base)' }}>
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg p-8"
+        className="w-full max-w-sm rounded-2xl p-8"
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div
-          className="mb-5 flex h-9 w-9 items-center justify-center rounded-md text-sm font-bold text-white"
+          className="mb-5 flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
           style={{ background: 'var(--accent)' }}
         >
           T
@@ -60,7 +60,7 @@ function Login() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded-md px-3 py-2 text-sm outline-none"
+          className="mb-4 w-full rounded-xl px-3 py-2 text-sm outline-none"
           style={{ border: '1px solid var(--border)' }}
         />
 
@@ -72,7 +72,7 @@ function Login() {
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-5 w-full rounded-md px-3 py-2 text-sm outline-none"
+          className="mb-5 w-full rounded-xl px-3 py-2 text-sm outline-none"
           style={{ border: '1px solid var(--border)' }}
         />
 
@@ -83,7 +83,7 @@ function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
+          className="w-full rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
           style={{ background: 'var(--accent)' }}
         >
           {loading ? 'Signing in…' : 'Sign in'}

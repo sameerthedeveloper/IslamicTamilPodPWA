@@ -37,10 +37,10 @@ function Topics() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="New topic name…"
-            className="flex-1 rounded-md px-3 py-2 text-sm outline-none"
+            className="flex-1 rounded-xl px-3 py-2 text-sm outline-none"
             style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}
           />
-          <button type="submit" className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
+          <button type="submit" className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white" style={{ background: 'var(--accent)' }}>
             <Plus size={15} /> Add
           </button>
         </form>
@@ -49,12 +49,12 @@ function Topics() {
         {loading ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : topics.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-lg py-16" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl py-16" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <Inbox size={22} style={{ color: 'var(--muted)' }} />
             <p className="text-sm" style={{ color: 'var(--muted)' }}>No topics yet.</p>
           </div>
         ) : (
-          <div className="rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div className="rounded-2xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             {topics.map((t, i) => (
               <div
                 key={t.id}
