@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    // Public content — anyone can read, only admins can write.
+    // NOTE: Firestore list rules can't filter individual documents out of
+    // a query result, so this does not hide DRAFT/UNPUBLISHED episodes
+    // from a client that queries the collection directly without the
+    // status == 'PUBLISHED' filter the app/CMS use — it only blocks writes.
+    match /episodes/{episodeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /scholars/{scholarId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /series/{seriesId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /topics/{topicId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /featured/{featuredId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Admin-only content — rights details are never shown publicly.
+    match /rights/{rightId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Account/role directory. A user can read their own profile (so the
+    // CMS/app can check role); only admins can list everyone or change
+    // roles. Nobody can self-promote to ADMIN via a client write.
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.role != 'ADMIN';
+      allow update: if isAdmin() ||
+        (isSignedIn() && request.auth.uid == userId &&
+         request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+
+      // Per-user saved content — only the owner (or an admin) can touch it.
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      }
+
+      match /history/{historyId} {
+        allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+  }
+}
