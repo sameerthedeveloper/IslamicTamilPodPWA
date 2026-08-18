@@ -27,44 +27,49 @@ function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--base)' }}>
+    <div
+      className="flex min-h-screen items-center justify-center sm:p-6"
+      style={{ background: 'var(--base)' }}
+    >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl p-8"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        className="pt-safe pb-safe flex w-full flex-1 flex-col justify-center border-0 border-[var(--border)] px-6 sm:max-w-sm sm:flex-none sm:rounded-2xl sm:border sm:p-8"
+        style={{ background: 'var(--surface)' }}
       >
         <div
-          className="mb-5 flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
+          className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold text-white sm:h-9 sm:w-9 sm:text-sm"
           style={{ background: 'var(--accent)' }}
         >
           T
         </div>
-        <h1 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>Admin sign in</h1>
-        <p className="mt-1 mb-6 text-sm" style={{ color: 'var(--muted)' }}>
+        <h1 className="text-xl font-semibold sm:text-lg" style={{ color: 'var(--ink)' }}>Admin sign in</h1>
+        <p className="mt-1 mb-8 text-sm sm:mb-6" style={{ color: 'var(--muted)' }}>
           Tamil Islamic Audio — content management
         </p>
 
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+        <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
           Email
         </label>
         <input
           type="email"
+          autoComplete="username"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4 w-full rounded-xl px-3 py-2 text-sm outline-none"
+          className="mb-4 w-full rounded-xl px-3 py-3 text-base outline-none sm:py-2 sm:text-sm"
           style={{ border: '1px solid var(--border)' }}
         />
 
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
+        <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
           Password
         </label>
         <input
           type="password"
+          autoComplete="current-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-5 w-full rounded-xl px-3 py-2 text-sm outline-none"
+          className="mb-5 w-full rounded-xl px-3 py-3 text-base outline-none sm:py-2 sm:text-sm"
           style={{ border: '1px solid var(--border)' }}
         />
 
@@ -75,7 +80,7 @@ function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
+          className="w-full rounded-xl px-4 py-3 text-base font-semibold text-white transition active:opacity-80 disabled:opacity-50 sm:py-2 sm:text-sm"
           style={{ background: 'var(--accent)' }}
         >
           {loading ? 'Signing in…' : 'Sign in'}
