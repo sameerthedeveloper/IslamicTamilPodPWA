@@ -42,6 +42,7 @@ function HomePage() {
     const [continueListening, setContinueListening] = useState([])
     const [loading, setLoading] = useState(true)
     const [historyLoading, setHistoryLoading] = useState(true)
+    const [historyError, setHistoryError] = useState(false)
     const [error, setError] = useState(false)
     const authStatus = useUserStore((s) => s.status)
 
@@ -63,9 +64,18 @@ function HomePage() {
     useEffect(() => {
         if (authStatus !== 'ready') return
         let cancelled = false
+        setHistoryLoading(true)
+        setHistoryError(false)
         getHistory()
             .then((rows) => {
                 if (!cancelled) setContinueListening(rows.map(historyToEpisode))
+            })
+            .catch((err) => {
+                // Previously uncaught — a permission-denied or network error
+                // rendered identically to "genuinely no history yet", with
+                // no way to tell the two apart.
+                console.error('[home] failed to load continue-listening history:', err.code || err.message, err)
+                if (!cancelled) setHistoryError(true)
             })
             .finally(() => {
                 if (!cancelled) setHistoryLoading(false)
@@ -86,10 +96,13 @@ function HomePage() {
 
             <CardLayout title="Continue Listening">
                 {historyLoading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
-                {!historyLoading && continueListening.length === 0 && (
+                {!historyLoading && historyError && (
+                    <EmptyRow icon={CloudOff} message="Couldn't load your history." />
+                )}
+                {!historyLoading && !historyError && continueListening.length === 0 && (
                     <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!historyLoading && continueListening.map((ep, i) => (
+                {!historyLoading && !historyError && continueListening.map((ep, i) => (
                     <TitleCard
                         key={ep.id}
                         index={i}

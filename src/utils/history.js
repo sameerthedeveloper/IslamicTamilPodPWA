@@ -20,5 +20,11 @@ export async function saveProgress(episode, currentTime, duration) {
       playedAt: serverTimestamp(),
     },
     { merge: true },
-  ).catch(() => {})
+  ).catch((err) => {
+    // Was silently swallowed before — a permission-denied write (e.g.
+    // Firestore rules not actually published yet) looked identical to
+    // "Continue Listening" just being empty, with no way to tell them
+    // apart. Surface it instead.
+    console.error('[history] failed to save playback progress:', err.code || err.message, err)
+  })
 }

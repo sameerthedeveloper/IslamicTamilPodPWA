@@ -84,8 +84,14 @@ function LibraryPage() {
     if (authStatus !== 'ready') return
     setLoading(true)
     Promise.all([
-      getBookmarks().catch(() => []),
-      getHistory().catch(() => []),
+      getBookmarks().catch((err) => {
+        console.error('[library] failed to load bookmarks:', err.code || err.message, err)
+        return []
+      }),
+      getHistory().catch((err) => {
+        console.error('[library] failed to load history:', err.code || err.message, err)
+        return []
+      }),
     ])
       .then(([bm, hist]) => {
         setBookmarks(bm)
