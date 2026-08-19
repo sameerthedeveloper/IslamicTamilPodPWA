@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePlayerStore } from '../store/playerStore'
 import { saveProgress } from '../utils/history'
 
@@ -116,6 +116,12 @@ function YoutubeEngine() {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
   const pollRef = useRef(null)
+  // The IFrame API loads asynchronously — if a video is already selected
+  // by the time onReady fires (e.g. the very first play of a session,
+  // before the script has finished loading), the load/play effects below
+  // must re-run once the player actually exists. Refs don't trigger
+  // re-renders, so this needs to be real state.
+  const [isReady, setIsReady] = useState(false)
   const currentEpisode = usePlayerStore((s) => s.currentEpisode)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
   const volume = usePlayerStore((s) => s.volume)
@@ -161,6 +167,7 @@ function YoutubeEngine() {
             })
             playerRef.current.setVolume(volume * 100)
             forceLowestQuality(playerRef.current)
+            setIsReady(true)
           },
           onStateChange: (e) => {
             if (e.data === YT.PlayerState.ENDED) onEnded()
@@ -184,7 +191,7 @@ function YoutubeEngine() {
   }, [])
 
   useEffect(() => {
-    if (!playerRef.current || !isYoutube || !currentEpisode) return
+    if (!playerRef.current || !isReady || !isYoutube || !currentEpisode) return
     if (playerRef.current.getVideoData?.()?.video_id !== currentEpisode.youtubeId) {
       playerRef.current.loadVideoById({
         videoId: currentEpisode.youtubeId,
@@ -193,13 +200,13 @@ function YoutubeEngine() {
       setDuration(0)
       if (!isPlaying) playerRef.current.pauseVideo?.()
     }
-  }, [currentEpisode, isYoutube])
+  }, [currentEpisode, isYoutube, isReady])
 
   useEffect(() => {
-    if (!playerRef.current || !isYoutube) return
+    if (!playerRef.current || !isReady || !isYoutube) return
     if (isPlaying) playerRef.current.playVideo?.()
     else playerRef.current.pauseVideo?.()
-  }, [isPlaying, isYoutube])
+  }, [isPlaying, isYoutube, isReady])
 
   // Mirror of NativeAudioEngine's guard above: pause this engine the
   // moment a native track becomes active, since its own play/pause effect
@@ -210,15 +217,15 @@ function YoutubeEngine() {
 
   useEffect(() => {
     if (playerRef.current?.setVolume) playerRef.current.setVolume(volume * 100)
-  }, [volume])
+  }, [volume, isReady])
 
   useEffect(() => {
     if (playerRef.current?.setPlaybackRate) playerRef.current.setPlaybackRate(playbackRate)
-  }, [playbackRate])
+  }, [playbackRate, isReady])
 
   useEffect(() => {
     clearInterval(pollRef.current)
-    if (!isYoutube) return
+    if (!isYoutube || !isReady) return
     pollRef.current = setInterval(() => {
       const p = playerRef.current
       if (!p?.getCurrentTime) return
@@ -227,7 +234,7 @@ function YoutubeEngine() {
       if (d) setDuration(d)
     }, 250)
     return () => clearInterval(pollRef.current)
-  }, [isYoutube])
+  }, [isYoutube, isReady])
 
   return (
     <div style={{ position: 'fixed', top: 0, left: '-9999px', width: 320, height: 180, pointerEvents: 'none' }}>
