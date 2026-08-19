@@ -33,7 +33,7 @@ function SurahList({ surahs, loading, error, onSelect, bookmark }) {
           onClick={() => onSelect(bookmark.surahId, bookmark.ayahId)}
           className="animate-rise-in mt-6 flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--gold-soft)', color: 'var(--gold)' }}>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
             <Bookmark size={16} />
           </span>
           <span className="min-w-0 flex-1">
@@ -290,7 +290,7 @@ function SurahReader({ onBack }) {
                   onClick={(e) => { e.stopPropagation(); toggleFavorite(currentSurah.id, a.number) }}
                   aria-label="Toggle favorite"
                   className="shrink-0 transition"
-                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--gold)' : 'var(--muted)' }}
+                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--accent)' : 'var(--muted)' }}
                 >
                   <Star size={16} fill={isFavorite(currentSurah.id, a.number) ? 'currentColor' : 'none'} />
                 </button>
