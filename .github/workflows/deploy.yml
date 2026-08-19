@@ -20,28 +20,11 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  backend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npm run lint
-      - run: npm run build
-      - run: npm test -- --passWithNoTests
-
 # The app (public site + /admin CMS) is a single Vite project deployed as
-# one Vercel project from the repo root. backend/ is no longer called by
-# either — the app talks to Firebase directly (see src/firebase.js) — but
-# is kept buildable here in case it's still deployed/used separately.
+# one Vercel project from the repo root. The old Node/Prisma API this repo
+# used to also carry (backend/) is no longer called by either — the app
+# talks to Firebase directly (see src/firebase.js) — and has been moved to
+# the `backend` branch instead of living in main unused.
 # Deploy triggers are handled by Vercel's own GitHub integration on push
-# to main — this workflow only gates that push with lint/build/test so a
+# to main — this workflow only gates that push with lint/build so a
 # broken commit doesn't reach it.

@@ -6,7 +6,7 @@ Tamil Islamic Podcast — one deployable app plus a legacy, no-longer-used API.
 |---|---|---|
 | App (public listener PWA + `/admin` CMS) | repo root (`src/`) | Vercel |
 | Firebase project (Auth, Firestore, Storage) | n/a — hosted by Firebase | Google Cloud |
-| ~~API~~ (legacy, unused) | `backend/` | Not deployed — kept in the repo but neither the app nor the CMS calls it anymore |
+| ~~API~~ (legacy, unused) | `backend` branch | Not deployed, not on `main` — neither the app nor the CMS calls it anymore, see below |
 
 The app used to be two separate Vite projects (`frontend/` and `cms/`) talking to a custom Node API in `backend/`. It's now a single Vite project at the repo root: the public site lives at `/`, `/library`, `/browse`, `/quran`, and the admin CMS lives at `/admin/*` (`src/admin/`), gated by Firebase Auth + a Firestore role check. Both talk to Firebase directly — there is no backend server to deploy.
 
@@ -132,4 +132,4 @@ Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired
 - The public app (`/`, `/library`, `/browse`, `/quran`) has no sign-in UI — `getBookmarks`/`getHistory` only return data once *some* Firebase Auth session exists, which currently nothing in the public app creates.
 - Image upload (`src/admin/components/ImageUpload.jsx`) previews locally but isn't wired to actually upload to Storage yet — only audio files (`src/admin/api/client.js`'s `audioApi.upload`) are.
 - Topics only supports create + list from the CMS — no edit/delete UI or backend call for it yet.
-- `backend/` (the old Node/Prisma API) still exists in the repo and is still covered by CI, but nothing calls it anymore. Safe to ignore, or remove in a follow-up if you're sure nothing external depends on it.
+- The old Node/Prisma API lives on the `backend` branch, not `main` — moved there since nothing calls it anymore. `git checkout backend` if you need to reference or resurrect it.
