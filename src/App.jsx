@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage'
 import LibraryPage from './pages/LibraryPage'
 import BrowsePage from './pages/BrowsePage'
 import QuranPage from './pages/QuranPage'
+import SettingsPage from './pages/SettingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './admin/components/ProtectedRoute'
@@ -27,6 +28,7 @@ function App() {
         <Route path="library" element={<LibraryPage />} />
         <Route path="browse" element={<BrowsePage />} />
         <Route path="quran" element={<QuranPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
 
       <Route path="login" element={<LoginPage />} />

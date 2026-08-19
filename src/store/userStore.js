@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { doc, getDoc } from 'firebase/firestore'
+import { signOut } from 'firebase/auth'
 import { auth, db } from '../firebase'
 
 export const useUserStore = create(() => ({
@@ -7,6 +8,15 @@ export const useUserStore = create(() => ({
   // 'pending' until Firebase reports the initial auth state, then 'ready'.
   status: 'pending',
 }))
+
+// The public app has no account-less state — signing out just drops back
+// to a fresh anonymous session. firebase.js's onAuthStateChanged listener
+// already re-triggers signInAnonymously() whenever the user goes null, so
+// this doesn't need to do that itself.
+export async function logout() {
+  await signOut(auth)
+  useUserStore.setState({ user: null })
+}
 
 async function loadProfile(fbUser) {
   if (fbUser.isAnonymous) return { uid: fbUser.uid, isAnonymous: true }

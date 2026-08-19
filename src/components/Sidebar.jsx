@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Search, Book, Bookmark } from 'lucide-react'
-import { useUserStore } from '../store/userStore'
+import { Home, Search, Book, Bookmark, Settings, LogOut } from 'lucide-react'
+import { useUserStore, logout } from '../store/userStore'
 
 const TABS = [
     { to: '/', label: 'Home', icon: Home, end: true },
@@ -14,6 +14,11 @@ function Sidebar() {
     const user = useUserStore((s) => s.user)
     const isSignedIn = user && !user.isAnonymous
     const initial = isSignedIn ? (user.name?.[0] ?? user.email?.[0] ?? 'U').toUpperCase() : 'U'
+
+    const handleLogout = async () => {
+        await logout()
+        navigate('/')
+    }
 
     return (
         <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-gray-200 bg-gray-100/95 backdrop-blur lg:flex">
@@ -47,9 +52,40 @@ function Sidebar() {
                 ))}
             </nav>
 
+            {/* Account & settings — kept visually separate from the main
+                nav above, with its own divider, since it's a different
+                kind of destination (account state, not content). */}
+            <div className="border-t border-gray-200 px-3 py-3 space-y-1">
+                <NavLink
+                    to="/settings"
+                    className={({ isActive }) =>
+                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                            isActive
+                                ? 'text-white shadow-sm'
+                                : 'text-gray-600 hover:bg-gray-200/70 hover:text-gray-950'
+                        }`
+                    }
+                    style={({ isActive }) => (isActive ? { background: 'var(--accent)' } : undefined)}
+                >
+                    <Settings size={18} strokeWidth={2.5} />
+                    Settings
+                </NavLink>
+
+                {isSignedIn && (
+                    <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition hover:bg-red-50"
+                        style={{ color: 'var(--danger)' }}
+                    >
+                        <LogOut size={18} strokeWidth={2.5} />
+                        Sign out
+                    </button>
+                )}
+            </div>
+
             <div className="border-t border-gray-200 p-4">
                 <button
-                    onClick={() => navigate(isSignedIn ? '/' : '/login')}
+                    onClick={() => navigate(isSignedIn ? '/settings' : '/login')}
                     className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-gray-200/70"
                 >
                     <span
