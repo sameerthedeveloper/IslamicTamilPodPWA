@@ -329,6 +329,23 @@ function HistorySync() {
     }
   }, [currentEpisode?.id, isPlaying])
 
+  // Also flush when the page is backgrounded — a PWA doesn't reliably
+  // unmount on background/OS-kill the way a closed tab does, so the
+  // unmount-only flush above can miss the last stretch of listening
+  // entirely if the app never comes back to foreground.
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'hidden') return
+      const { currentEpisode: ep, currentTime: t, duration: d } = stateRef.current
+      if (ep && Math.abs(t - lastSavedRef.current) > 2) {
+        saveProgress(ep, t, d)
+        lastSavedRef.current = t
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [])
+
   return null
 }
 

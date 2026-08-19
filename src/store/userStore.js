@@ -22,7 +22,12 @@ async function loadProfile(fbUser) {
 
 auth.onAuthStateChanged(async (fbUser) => {
   if (!fbUser) {
-    useUserStore.setState({ user: null, status: 'ready' })
+    // firebase.js reacts to this same event by kicking off
+    // signInAnonymously() — don't mark ready yet, or a fetch gated on
+    // status stays stuck with no user forever (its effect never reruns
+    // once status is already 'ready', even when the real anonymous user
+    // lands moments later). Stay 'pending' until that settles; the
+    // fallback timer below covers the case where it never does.
     return
   }
   try {
@@ -32,3 +37,12 @@ auth.onAuthStateChanged(async (fbUser) => {
     useUserStore.setState({ user: null, status: 'ready' })
   }
 })
+
+// Anonymous sign-in can fail (offline, blocked storage, etc) and never
+// fire onAuthStateChanged again — without this, status would stay
+// 'pending' forever and every gated fetch would just hang.
+setTimeout(() => {
+  if (useUserStore.getState().status === 'pending') {
+    useUserStore.setState({ status: 'ready' })
+  }
+}, 8000)

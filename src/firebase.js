@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { isSupported, getAnalytics } from 'firebase/analytics'
 
@@ -17,7 +22,18 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 
-export const db = getFirestore(app)
+// Persistent local cache so reads already made (episodes, bookmarks,
+// history) keep working offline, not just the static PWA shell. Falls
+// back to the plain in-memory client if IndexedDB persistence throws
+// (private browsing, some in-app browsers, etc).
+export let db
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  })
+} catch {
+  db = getFirestore(app)
+}
 
 // The public app has no account system — sign every visitor in anonymously
 // so they get a stable per-device uid, which is all "users/{uid}/history"
