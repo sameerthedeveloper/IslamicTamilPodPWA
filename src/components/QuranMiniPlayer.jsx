@@ -28,7 +28,7 @@ function QuranMiniPlayer() {
             <div className="h-0.5 w-full bg-gray-100">
                 <div
                     className="h-full transition-[width] duration-300 ease-linear"
-                    style={{ width: `${pct}%`, background: 'var(--gold)' }}
+                    style={{ width: `${pct}%`, background: 'var(--accent)' }}
                 />
             </div>
 
@@ -40,7 +40,7 @@ function QuranMiniPlayer() {
 
                     <div
                         className="font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden"
-                        style={{ background: 'linear-gradient(155deg, var(--gold), #8A6A2F)' }}>
+                        style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
                         {currentSurah.nameAr ?? currentSurah.id}
                     </div>
 
@@ -51,7 +51,7 @@ function QuranMiniPlayer() {
                                 {currentSurah.nameEn}
                             </p>
                             {isPlaying && (
-                                <span className="shrink-0" style={{ color: 'var(--gold)' }}>
+                                <span className="shrink-0" style={{ color: 'var(--accent)' }}>
                                     <EqualizerBars />
                                 </span>
                             )}
@@ -74,7 +74,7 @@ function QuranMiniPlayer() {
                     <button
                         onClick={(e) => { e.stopPropagation(); togglePlay() }}
                         className="flex size-10 items-center justify-center rounded-full text-white transition-transform duration-150 hover:opacity-90 active:scale-90"
-                        style={{ background: 'var(--gold)' }}
+                        style={{ background: 'var(--accent)' }}
                         aria-label="Play or pause">
                         {isPlaying ? <Pause size={18} strokeWidth={3} /> : <Play size={18} strokeWidth={3} />}
                     </button>
