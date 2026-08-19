@@ -10,7 +10,7 @@ const TABS = [
 
 function BottomNavigationBar() {
     return (
-        <nav className="fixed bottom-0 my-3 z-50 inset-x-5  rounded-full border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-sm ">
+        <nav className="fixed inset-x-5 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 rounded-[28px] border border-gray-200 bg-white/95 p-2 shadow-xl backdrop-blur-sm">
             <div className="grid grid-cols-4 gap-1">
                 {TABS.map(({ to, label, icon: Icon, end }) => (
                     <NavLink
@@ -18,7 +18,7 @@ function BottomNavigationBar() {
                         to={to}
                         end={end}
                         className={({ isActive }) =>
-                            `flex flex-col items-center justify-center gap-1 rounded-full py-2.5 transition-all duration-200 ${
+                            `flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 transition-all duration-200 ${
                                 isActive
                                     ? 'text-white shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950'

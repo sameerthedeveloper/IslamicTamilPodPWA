@@ -74,6 +74,15 @@ function NativeAudioEngine() {
     }
   }, [isPlaying, isYoutube])
 
+  // The other engine's effects early-return once isYoutube flips (they
+  // guard on `isYoutube`), so switching tracks never actually pauses
+  // whichever engine was playing the previous one — without this both
+  // play at once. Explicitly stop this engine the moment it's no longer
+  // the active one.
+  useEffect(() => {
+    if (isYoutube) audioRef.current?.pause()
+  }, [isYoutube])
+
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
@@ -167,6 +176,13 @@ function YoutubeEngine() {
     if (isPlaying) playerRef.current.playVideo?.()
     else playerRef.current.pauseVideo?.()
   }, [isPlaying, isYoutube])
+
+  // Mirror of NativeAudioEngine's guard above: pause this engine the
+  // moment a native track becomes active, since its own play/pause effect
+  // (deps include isYoutube) stops reacting once isYoutube goes false.
+  useEffect(() => {
+    if (!isYoutube) playerRef.current?.pauseVideo?.()
+  }, [isYoutube])
 
   useEffect(() => {
     if (playerRef.current?.setVolume) playerRef.current.setVolume(volume * 100)

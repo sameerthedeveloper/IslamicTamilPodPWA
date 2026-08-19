@@ -14,7 +14,7 @@ function AppLayout() {
     <div className="flex h-screen flex-col overflow-hidden">
       <TopBar />
 
-      <main className="flex-1 overflow-y-auto pt-[calc(5rem+3.75rem+1rem)] pb-24">
+      <main className="flex-1 overflow-y-auto pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
