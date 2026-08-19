@@ -109,8 +109,9 @@ function FullPlayerSheet() {
               style={{
                 height: `${h * 100}%`,
                 background: 'var(--accent)',
-                animation: isPlaying ? `now-playing-wave ${0.7 + (i % 3) * 0.15}s ease-in-out infinite` : 'none',
-                animationDelay: `${i * 0.06}s`,
+                animation: isPlaying
+                  ? `now-playing-wave ${0.7 + (i % 3) * 0.15}s ease-in-out ${i * 0.06}s infinite`
+                  : 'none',
                 opacity: isPlaying ? 1 : 0.35,
                 transform: isPlaying ? undefined : 'scaleY(0.3)',
               }}
