@@ -21,8 +21,8 @@ function Sidebar() {
     }
 
     return (
-        <aside className="fixed inset-y-3 ml-3 inset-x-3 rounded-3xl shadow left-0 z-50 hidden w-64 flex-col border border-gray-200 bg-gray-100/95 backdrop-blur lg:flex">
-            <div className="px-6 pt-8 pb-6">
+        <aside className="fixed inset-y-3 ml-3 inset-x-3 rounded-3xl shadow left-0 z-50 hidden w-64 flex-col border border-gray-300  bg-gray-100 backdrop-blur lg:flex">
+            <div className="px-6 pt-8 pb-6  m-3 rounded-2xl border border-gray-300 shadow flexcol  justify-between items-center">
                 <p className="font-display text-xl font-semibold tracking-tight text-gray-900">
                     Tamil Islamic
                 </p>
@@ -55,7 +55,7 @@ function Sidebar() {
             {/* Account & settings — kept visually separate from the main
                 nav above, with its own divider, since it's a different
                 kind of destination (account state, not content). */}
-            <div className="border-t border-gray-200 px-3 py-3 space-y-1">
+            <div className="border mx-3 rounded-2xl shadow  border-gray-300 px-3 py-3 space-y-1">
                 <NavLink
                     to="/settings"
                     className={({ isActive }) =>
@@ -83,10 +83,10 @@ function Sidebar() {
                 )}
             </div>
 
-            <div className="border-t border-gray-200 p-4">
+            <div className="border m-3 rounded-2xl border-gray-300 shadow-lg p-4 hover:bg-gray-200/70">
                 <button
                     onClick={() => navigate(isSignedIn ? '/settings' : '/login')}
-                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-gray-200/70"
+                    className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition "
                 >
                     <span
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-white text-sm font-semibold shadow-sm"
