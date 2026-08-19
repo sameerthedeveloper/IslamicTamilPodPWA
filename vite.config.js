@@ -41,9 +41,23 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         runtimeCaching: [
           {
-            // Firebase Storage-hosted audio/images (episode thumbnails, cover
-            // art, uploaded audio files) — cache-first since files never
-            // change in place (upload writes a new path each time).
+            // Uploaded audio files (Storage path audio/{episodeId}/...,
+            // -> .../o/audio%2F... in the download URL). NetworkOnly, not
+            // cached — <audio> streams/seeks these via HTTP Range requests,
+            // which Workbox's CacheFirst/other cache-based strategies don't
+            // serve correctly out of the box (no workbox-range-requests
+            // plugin available in generateSW mode). Caching them anyway was
+            // silently breaking seeking and stalling resume after the app
+            // was backgrounded — let the browser hit the network directly
+            // instead, same as it would with no service worker at all.
+            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*\/o\/audio%2F.*/i,
+            handler: 'NetworkOnly',
+          },
+          {
+            // Everything else on Firebase Storage (thumbnails, cover art) —
+            // small, whole-file image responses with no Range requests
+            // involved, safe to cache-first since a re-upload always writes
+            // a new path rather than overwriting one in place.
             urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
