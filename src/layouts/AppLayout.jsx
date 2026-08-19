@@ -6,6 +6,9 @@ import Sidebar from '../components/Sidebar'
 import AudioEngine from '../components/AudioEngine'
 import ErrorBoundary from '../components/ErrorBoundary'
 import FullPlayerSheet from '../components/FullPlayerSheet'
+import QuranAudioEngine from '../components/QuranAudioEngine'
+import QuranMiniPlayer from '../components/QuranMiniPlayer'
+import QuranFullPlayerSheet from '../components/QuranFullPlayerSheet'
 
 function AppLayout() {
   const { pathname } = useLocation()
@@ -35,9 +38,12 @@ function AppLayout() {
       </main>
 
       {!isQuran && <MiniPlayer />}
+      {!isQuran && <QuranMiniPlayer />}
       <BottomNavigationBar />
       <AudioEngine />
       <FullPlayerSheet />
+      <QuranAudioEngine />
+      <QuranFullPlayerSheet />
     </div>
   )
 }

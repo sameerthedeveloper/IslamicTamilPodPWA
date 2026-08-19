@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, Play, Pause, SkipBack, SkipForward, Bookmark, Star, Gauge, WifiOff } from 'lucide-react'
-import { getSurahList, getSurahWithTranslation, RECITERS } from '../api/quranCloud'
+import { getSurahList, RECITERS } from '../api/quranCloud'
 import { useQuranStore } from '../store/quranStore'
+import EqualizerBars from '../components/EqualizerBars'
 
 const SPEEDS = [1, 1.25, 1.5, 0.75]
 
@@ -79,21 +80,25 @@ function SurahList({ surahs, loading, error, onSelect, bookmark }) {
   )
 }
 
-function SurahReader({ surahId, jumpToAyah, onBack }) {
-  const [surah, setSurah] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+// In-page reader — reads/controls playback via quranStore, same state the
+// app-wide QuranMiniPlayer/QuranFullPlayerSheet use, so playback started
+// here keeps going (and stays controllable) after navigating away.
+function SurahReader({ onBack }) {
   const [showSpeed, setShowSpeed] = useState(false)
   const [showReciter, setShowReciter] = useState(false)
-  const audioRef = useRef(null)
   const ayahRefs = useRef({})
 
+  const currentSurah = useQuranStore((s) => s.currentSurah)
+  const surahData = useQuranStore((s) => s.surahData)
+  const surahLoading = useQuranStore((s) => s.surahLoading)
+  const surahError = useQuranStore((s) => s.surahError)
   const currentAyah = useQuranStore((s) => s.currentAyah)
   const isPlaying = useQuranStore((s) => s.isPlaying)
   const playbackSpeed = useQuranStore((s) => s.playbackSpeed)
   const reciter = useQuranStore((s) => s.reciter)
-  const setAyah = useQuranStore((s) => s.setAyah)
-  const setPlaying = useQuranStore((s) => s.setPlaying)
+  const togglePlay = useQuranStore((s) => s.togglePlay)
+  const nextAyah = useQuranStore((s) => s.nextAyah)
+  const prevAyah = useQuranStore((s) => s.prevAyah)
   const setSpeed = useQuranStore((s) => s.setSpeed)
   const setReciter = useQuranStore((s) => s.setReciter)
   const setBookmark = useQuranStore((s) => s.setBookmark)
@@ -101,40 +106,10 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
   const isFavorite = useQuranStore((s) => s.isFavorite)
 
   useEffect(() => {
-    let cancelled = false
-    // Deferred a tick so this isn't a synchronous setState-in-effect (the
-    // initial useState defaults already cover the very first run).
-    queueMicrotask(() => {
-      if (!cancelled) {
-        setLoading(true)
-        setError(false)
-      }
-    })
-    getSurahWithTranslation(surahId, reciter)
-      .then((data) => {
-        if (cancelled) return
-        setSurah(data)
-        setAyah(jumpToAyah || 1)
-      })
-      .catch(() => !cancelled && setError(true))
-      .finally(() => !cancelled && setLoading(false))
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [surahId, reciter])
-
-  useEffect(() => {
     ayahRefs.current[currentAyah]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [currentAyah])
 
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.playbackRate = playbackSpeed
-    if (isPlaying) audio.play().catch(() => setPlaying(false))
-    else audio.pause()
-  }, [isPlaying, currentAyah, playbackSpeed, setPlaying])
-
-  if (loading) {
+  if (surahLoading) {
     return (
       <div className="px-5 pt-6 lg:mx-auto lg:max-w-3xl lg:px-10 lg:pt-10">
         <div className="skeleton h-6 w-40 rounded-full" />
@@ -147,7 +122,7 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
     )
   }
 
-  if (error || !surah) {
+  if (surahError || !surahData) {
     return (
       <div className="px-5 pt-6 lg:mx-auto lg:max-w-3xl lg:px-10 lg:pt-10">
         <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500">
@@ -161,21 +136,11 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
     )
   }
 
-  const ayah = surah.ayahs.find((a) => a.number === currentAyah) ?? surah.ayahs[0]
-  const idx = surah.ayahs.findIndex((a) => a.number === ayah.number)
+  const ayah = surahData.ayahs.find((a) => a.number === currentAyah) ?? surahData.ayahs[0]
+  const idx = surahData.ayahs.findIndex((a) => a.number === ayah.number)
   const hasPrev = idx > 0
-  const hasNext = idx < surah.ayahs.length - 1
-  const pct = ((idx + 1) / surah.ayahs.length) * 100
-
-  const goTo = (n) => {
-    setAyah(n)
-    setBookmark(surahId, n)
-  }
-
-  const handleEnded = () => {
-    if (hasNext) goTo(surah.ayahs[idx + 1].number)
-    else setPlaying(false)
-  }
+  const hasNext = idx < surahData.ayahs.length - 1
+  const pct = ((idx + 1) / surahData.ayahs.length) * 100
 
   return (
     <div className="px-5 pt-6 lg:mx-auto lg:max-w-3xl lg:px-10 lg:pt-10">
@@ -185,7 +150,7 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
           <ChevronLeft size={16} /> Surahs
         </button>
         <button
-          onClick={() => setBookmark(surahId, currentAyah)}
+          onClick={() => setBookmark(currentSurah.id, currentAyah)}
           aria-label="Bookmark this ayah"
           className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:text-[var(--accent)]"
         >
@@ -195,10 +160,10 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
 
       <div className="mt-4 flex items-baseline justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">{surah.nameEn}</h1>
-          <p className="text-xs text-gray-500">{surah.revelation} &middot; {surah.ayahs.length} ayahs</p>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">{surahData.nameEn}</h1>
+          <p className="text-xs text-gray-500">{surahData.revelation} &middot; {surahData.ayahs.length} ayahs</p>
         </div>
-        <p className="font-display text-3xl text-gray-800">{surah.nameAr}</p>
+        <p className="font-display text-3xl text-gray-800">{surahData.nameAr}</p>
       </div>
 
       {/* progress */}
@@ -207,12 +172,16 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
           <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
         </div>
         <p className="font-data mt-1.5 text-[11px]" style={{ color: 'var(--muted)' }}>
-          Ayah {idx + 1} of {surah.ayahs.length}
+          Ayah {idx + 1} of {surahData.ayahs.length}
         </p>
       </div>
 
       {/* current ayah card, larger + featured */}
-      <div className="animate-rise-in mt-6 rounded-3xl border border-gray-200 p-6 shadow-sm" style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--surface))' }}>
+      <div
+        ref={(el) => { ayahRefs.current[ayah.number] = el }}
+        className="animate-rise-in mt-6 rounded-3xl border border-gray-200 p-6 shadow-sm"
+        style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--surface))' }}
+      >
         <div className="flex items-start justify-between gap-3">
           <span
             className="font-data flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
@@ -221,12 +190,12 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
             {ayah.number}
           </span>
           <button
-            onClick={() => toggleFavorite(surahId, ayah.number)}
+            onClick={() => toggleFavorite(currentSurah.id, ayah.number)}
             aria-label="Toggle favorite"
             className="shrink-0 transition"
-            style={{ color: isFavorite(surahId, ayah.number) ? 'var(--gold)' : 'var(--muted)' }}
+            style={{ color: isFavorite(currentSurah.id, ayah.number) ? 'var(--gold)' : 'var(--muted)' }}
           >
-            <Star size={18} fill={isFavorite(surahId, ayah.number) ? 'currentColor' : 'none'} />
+            <Star size={18} fill={isFavorite(currentSurah.id, ayah.number) ? 'currentColor' : 'none'} />
           </button>
         </div>
         <p dir="rtl" className="font-display mt-4 text-right text-2xl leading-loose text-gray-900">
@@ -235,25 +204,29 @@ function SurahReader({ surahId, jumpToAyah, onBack }) {
         <p className="mt-4 text-sm leading-relaxed text-gray-600">{ayah.translation}</p>
       </div>
 
-      <audio ref={audioRef} src={ayah.audioUrl} onEnded={handleEnded} preload="none" />
-
       {/* transport controls */}
       <div className="mt-6 flex items-center justify-center gap-6">
-        <button onClick={() => hasPrev && goTo(surah.ayahs[idx - 1].number)} disabled={!hasPrev} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Previous ayah">
+        <button onClick={prevAyah} disabled={!hasPrev} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Previous ayah">
           <SkipBack size={20} strokeWidth={2.5} />
         </button>
         <button
-          onClick={() => setPlaying(!isPlaying)}
+          onClick={togglePlay}
           className="flex size-14 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 hover:opacity-90 active:scale-90"
           style={{ background: 'var(--accent)' }}
           aria-label="Play or pause"
         >
           {isPlaying ? <Pause size={24} strokeWidth={2.5} /> : <Play size={24} strokeWidth={2.5} />}
         </button>
-        <button onClick={() => hasNext && goTo(surah.ayahs[idx + 1].number)} disabled={!hasNext} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Next ayah">
+        <button onClick={nextAyah} disabled={!hasNext} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Next ayah">
           <SkipForward size={20} strokeWidth={2.5} />
         </button>
       </div>
+
+      {isPlaying && (
+        <div className="mt-3 flex justify-center" style={{ color: 'var(--accent)' }}>
+          <EqualizerBars />
+        </div>
+      )}
 
       {/* speed + reciter */}
       <div className="mt-6 flex items-center justify-center gap-2">
@@ -314,9 +287,9 @@ function QuranPage() {
   const [error, setError] = useState(false)
 
   const currentSurah = useQuranStore((s) => s.currentSurah)
-  const setSurah = useQuranStore((s) => s.setSurah)
+  const openSurah = useQuranStore((s) => s.openSurah)
+  const closeSurah = useQuranStore((s) => s.closeSurah)
   const bookmark = useQuranStore((s) => s.bookmark)
-  const [jumpToAyah, setJumpToAyah] = useState(1)
 
   useEffect(() => {
     getSurahList()
@@ -327,19 +300,11 @@ function QuranPage() {
 
   const handleSelect = (surahId, ayahId) => {
     const meta = surahs.find((s) => s.id === surahId) ?? { id: surahId }
-    setSurah(meta)
-    setJumpToAyah(ayahId || 1)
+    openSurah(meta, ayahId || 1)
   }
 
   if (currentSurah) {
-    return (
-      <SurahReader
-        key={currentSurah.id}
-        surahId={currentSurah.id}
-        jumpToAyah={jumpToAyah}
-        onBack={() => setSurah(null)}
-      />
-    )
+    return <SurahReader onBack={closeSurah} />
   }
 
   return (

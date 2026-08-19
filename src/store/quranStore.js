@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { FALLBACK_RECITER } from '../api/quranCloud'
+import { getSurahWithTranslation, FALLBACK_RECITER } from '../api/quranCloud'
+import { usePlayerStore } from './playerStore'
 
 const LS_BOOKMARK = 'quran:bookmark'
 const LS_FAVORITES = 'quran:favorites'
@@ -26,10 +27,17 @@ function sameRef(a, b) {
   return a.surahId === b.surahId && a.ayahId === b.ayahId
 }
 
+// Single source of truth for Quran playback — shared by the in-page
+// reader, the app-wide mini player, and the full player sheet, the same
+// way playerStore backs episode playback across MiniPlayer/FullPlayerSheet.
 export const useQuranStore = create((set, get) => ({
   currentSurah: null, // { id, nameEn, nameAr, ayatCount, revelation }
+  surahData: null, // { ayahs: [...] } once loaded
+  surahLoading: false,
+  surahError: false,
   currentAyah: 1,
   isPlaying: false,
+  isPlayerOpen: false,
   playbackSpeed: 1.0,
   reciter: FALLBACK_RECITER,
 
@@ -37,11 +45,80 @@ export const useQuranStore = create((set, get) => ({
   favorites: readLS(LS_FAVORITES, []),
   history: readLS(LS_HISTORY, []),
 
-  setSurah: (surah) => set({ currentSurah: surah, currentAyah: 1, isPlaying: false }),
-  setAyah: (ayahId) => set({ currentAyah: ayahId }),
-  setPlaying: (isPlaying) => set({ isPlaying }),
+  // Opens (or switches to) a surah and starts loading its ayahs. Pauses
+  // any episode playback so the two audio sources never overlap.
+  openSurah: (surahMeta, jumpAyah) => {
+    usePlayerStore.getState().pause()
+    const requestId = Symbol('surah-load')
+    set({
+      currentSurah: surahMeta,
+      currentAyah: jumpAyah || 1,
+      isPlaying: false,
+      surahData: null,
+      surahLoading: true,
+      surahError: false,
+      _requestId: requestId,
+    })
+    getSurahWithTranslation(surahMeta.id, get().reciter)
+      .then((data) => {
+        if (get()._requestId !== requestId) return
+        set({ surahData: data, surahLoading: false })
+      })
+      .catch(() => {
+        if (get()._requestId !== requestId) return
+        set({ surahLoading: false, surahError: true })
+      })
+  },
+
+  closeSurah: () => set({ currentSurah: null, surahData: null, isPlaying: false, isPlayerOpen: false }),
+
+  openPlayer: () => set((state) => (state.currentSurah ? { isPlayerOpen: true } : state)),
+  closePlayer: () => set({ isPlayerOpen: false }),
+
+  setAyah: (ayahId) => {
+    set({ currentAyah: ayahId })
+    const { currentSurah } = get()
+    if (currentSurah) get().setBookmark(currentSurah.id, ayahId)
+  },
+
+  play: () => {
+    usePlayerStore.getState().pause()
+    set({ isPlaying: true })
+  },
+  pause: () => set({ isPlaying: false }),
+  togglePlay: () => (get().isPlaying ? get().pause() : get().play()),
+
+  nextAyah: () => {
+    const { surahData, currentAyah } = get()
+    if (!surahData) return
+    const idx = surahData.ayahs.findIndex((a) => a.number === currentAyah)
+    const next = surahData.ayahs[idx + 1]
+    if (next) get().setAyah(next.number)
+  },
+  prevAyah: () => {
+    const { surahData, currentAyah } = get()
+    if (!surahData) return
+    const idx = surahData.ayahs.findIndex((a) => a.number === currentAyah)
+    const prev = surahData.ayahs[idx - 1]
+    if (prev) get().setAyah(prev.number)
+  },
+
+  // Advances to the next ayah, or stops at the end of the surah.
+  onAyahEnded: () => {
+    const { surahData, currentAyah } = get()
+    if (!surahData) return
+    const idx = surahData.ayahs.findIndex((a) => a.number === currentAyah)
+    const next = surahData.ayahs[idx + 1]
+    if (next) get().setAyah(next.number)
+    else set({ isPlaying: false })
+  },
+
   setSpeed: (playbackSpeed) => set({ playbackSpeed }),
-  setReciter: (reciter) => set({ reciter }),
+  setReciter: (reciter) => {
+    set({ reciter })
+    const { currentSurah, currentAyah } = get()
+    if (currentSurah) get().openSurah(currentSurah, currentAyah)
+  },
 
   setBookmark: (surahId, ayahId) => {
     const bookmark = { surahId, ayahId, timestamp: new Date().toISOString() }
@@ -65,3 +142,9 @@ export const useQuranStore = create((set, get) => ({
 
   isFavorite: (surahId, ayahId) => get().favorites.some((f) => sameRef(f, { surahId, ayahId })),
 }))
+
+// Episode playback (playerStore) pausing Quran playback in return, so
+// starting an episode from anywhere in the app stops Quran audio too.
+usePlayerStore.subscribe((state, prev) => {
+  if (state.isPlaying && !prev.isPlaying) useQuranStore.getState().pause()
+})
