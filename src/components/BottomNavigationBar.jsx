@@ -18,7 +18,7 @@ function BottomNavigationBar() {
                         to={to}
                         end={end}
                         className={({ isActive }) =>
-                            `flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 transition-all duration-200 ${
+                            `flex flex-col items-center justify-center gap-1 rounded-full py-2.5 transition-all duration-200 ${
                                 isActive
                                     ? 'text-white shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950'

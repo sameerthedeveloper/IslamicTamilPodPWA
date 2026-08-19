@@ -22,7 +22,7 @@ function BottomNavBar() {
             key={key}
             to={to}
             end={end}
-            className="flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 transition-all duration-200"
+            className="flex flex-col items-center justify-center gap-1 rounded-full py-2.5 transition-all duration-200"
             style={({ isActive }) => ({
               background: isActive ? 'var(--accent)' : 'transparent',
               color: isActive ? '#fff' : 'var(--muted)',
