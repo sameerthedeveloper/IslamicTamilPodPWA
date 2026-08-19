@@ -88,7 +88,7 @@ function QuranFullPlayerSheet() {
 
         <div className="mt-4">
           <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
-            <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--gold)' }} />
+            <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
           </div>
           <p className="font-data mt-1.5 text-[11px]" style={{ color: 'var(--muted)' }}>
             {total ? `Ayah ${idx + 1} of ${total}` : ''}
@@ -107,7 +107,7 @@ function QuranFullPlayerSheet() {
           <button
             onClick={togglePlay}
             className="relative flex size-16 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 hover:opacity-90 active:scale-90"
-            style={{ background: 'var(--gold)' }}
+            style={{ background: 'var(--accent)' }}
             aria-label="Play or pause">
             {isPlaying ? <Pause size={28} strokeWidth={2.5} /> : <Play size={28} strokeWidth={2.5} />}
           </button>
@@ -122,7 +122,7 @@ function QuranFullPlayerSheet() {
         </div>
 
         {isPlaying && (
-          <div className="mt-1.5 flex justify-center" style={{ color: 'var(--gold)' }}>
+          <div className="mt-1.5 flex justify-center" style={{ color: 'var(--accent)' }}>
             <EqualizerBars />
           </div>
         )}
@@ -144,7 +144,7 @@ function QuranFullPlayerSheet() {
                     key={sp}
                     onClick={() => { setSpeed(sp); setShowSpeed(false) }}
                     className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
-                    style={sp === playbackSpeed ? { color: 'var(--gold)', fontWeight: 600 } : undefined}
+                    style={sp === playbackSpeed ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
                   >
                     {sp}×
                   </button>
@@ -167,7 +167,7 @@ function QuranFullPlayerSheet() {
                     key={r.id}
                     onClick={() => { setReciter(r.id); setShowReciter(false) }}
                     className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
-                    style={r.id === reciter ? { color: 'var(--gold)', fontWeight: 600 } : undefined}
+                    style={r.id === reciter ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
                   >
                     {r.label}
                   </button>
@@ -209,27 +209,27 @@ function QuranFullPlayerSheet() {
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') playAyah(a.number) }}
               className="cursor-pointer rounded-3xl border p-5 shadow-sm transition-all duration-300"
               style={{
-                borderColor: isActive ? 'var(--gold)' : 'var(--border)',
+                borderColor: isActive ? 'var(--accent)' : 'var(--border)',
                 background: isActive
-                  ? 'linear-gradient(160deg, var(--gold-soft), var(--surface))'
+                  ? 'linear-gradient(160deg, var(--accent-soft), var(--surface))'
                   : 'var(--surface)',
               }}
             >
               <div className="flex items-start justify-between gap-3">
                 <span
                   className="font-data flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white transition-colors duration-300"
-                  style={{ background: isActive ? 'var(--gold)' : 'var(--muted)' }}
+                  style={{ background: isActive ? 'var(--accent)' : 'var(--muted)' }}
                 >
                   {a.number}
                 </span>
                 {isActive && isPlaying && (
-                  <span style={{ color: 'var(--gold)' }}><EqualizerBars /></span>
+                  <span style={{ color: 'var(--accent)' }}><EqualizerBars /></span>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleFavorite(currentSurah.id, a.number) }}
                   aria-label="Toggle favorite"
                   className="shrink-0 transition"
-                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--gold)' : 'var(--muted)' }}
+                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--accent)' : 'var(--muted)' }}
                 >
                   <Star size={16} fill={isFavorite(currentSurah.id, a.number) ? 'currentColor' : 'none'} />
                 </button>
