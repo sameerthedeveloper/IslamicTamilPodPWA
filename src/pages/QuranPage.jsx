@@ -99,12 +99,15 @@ function SurahReader({ onBack }) {
   const togglePlay = useQuranStore((s) => s.togglePlay)
   const nextAyah = useQuranStore((s) => s.nextAyah)
   const prevAyah = useQuranStore((s) => s.prevAyah)
+  const playAyah = useQuranStore((s) => s.playAyah)
   const setSpeed = useQuranStore((s) => s.setSpeed)
   const setReciter = useQuranStore((s) => s.setReciter)
   const setBookmark = useQuranStore((s) => s.setBookmark)
   const toggleFavorite = useQuranStore((s) => s.toggleFavorite)
   const isFavorite = useQuranStore((s) => s.isFavorite)
 
+  // Keeps the currently-reciting verse scrolled into view as playback
+  // auto-advances, so you can read along without touching the screen.
   useEffect(() => {
     ayahRefs.current[currentAyah]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [currentAyah])
@@ -136,145 +139,169 @@ function SurahReader({ onBack }) {
     )
   }
 
-  const ayah = surahData.ayahs.find((a) => a.number === currentAyah) ?? surahData.ayahs[0]
-  const idx = surahData.ayahs.findIndex((a) => a.number === ayah.number)
+  const idx = surahData.ayahs.findIndex((a) => a.number === currentAyah)
   const hasPrev = idx > 0
   const hasNext = idx < surahData.ayahs.length - 1
   const pct = ((idx + 1) / surahData.ayahs.length) * 100
 
   return (
-    <div className="px-5 pt-6 lg:mx-auto lg:max-w-3xl lg:px-10 lg:pt-10">
+    <div className="lg:mx-auto lg:max-w-3xl">
 
-      <div className="flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 transition hover:text-gray-900">
-          <ChevronLeft size={16} /> Surahs
-        </button>
-        <button
-          onClick={() => setBookmark(currentSurah.id, currentAyah)}
-          aria-label="Bookmark this ayah"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:text-[var(--accent)]"
-        >
-          <Bookmark size={15} />
-        </button>
-      </div>
+      {/* Sticky control header — stays put while the verse list below it
+          scrolls, so play/skip/bookmark are always reachable on a phone
+          without scrolling back up. */}
+      <div className="sticky top-0 z-10 -mt-px bg-[var(--base)]/95 px-5 pb-4 pt-6 backdrop-blur lg:px-10 lg:pt-10">
 
-      <div className="mt-4 flex items-baseline justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">{surahData.nameEn}</h1>
-          <p className="text-xs text-gray-500">{surahData.revelation} &middot; {surahData.ayahs.length} ayahs</p>
+        <div className="flex items-center justify-between">
+          <button onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 transition hover:text-gray-900">
+            <ChevronLeft size={16} /> Surahs
+          </button>
+          <button
+            onClick={() => setBookmark(currentSurah.id, currentAyah)}
+            aria-label="Bookmark this ayah"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:text-[var(--accent)]"
+          >
+            <Bookmark size={15} />
+          </button>
         </div>
-        <p className="font-display text-3xl text-gray-800">{surahData.nameAr}</p>
-      </div>
 
-      {/* progress */}
-      <div className="mt-4">
-        <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+        <div className="mt-3 flex items-baseline justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">{surahData.nameEn}</h1>
+            <p className="text-xs text-gray-500">{surahData.revelation} &middot; {surahData.ayahs.length} ayahs</p>
+          </div>
+          <p className="font-display text-3xl text-gray-800">{surahData.nameAr}</p>
         </div>
-        <p className="font-data mt-1.5 text-[11px]" style={{ color: 'var(--muted)' }}>
-          Ayah {idx + 1} of {surahData.ayahs.length}
-        </p>
-      </div>
 
-      {/* current ayah card, larger + featured */}
-      <div
-        ref={(el) => { ayahRefs.current[ayah.number] = el }}
-        className="animate-rise-in mt-6 rounded-3xl border border-gray-200 p-6 shadow-sm"
-        style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--surface))' }}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <span
-            className="font-data flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+        <div className="mt-3">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+          </div>
+          <p className="font-data mt-1.5 text-[11px]" style={{ color: 'var(--muted)' }}>
+            Ayah {idx + 1} of {surahData.ayahs.length}
+          </p>
+        </div>
+
+        <div className="mt-3 flex items-center justify-center gap-6">
+          <button onClick={prevAyah} disabled={!hasPrev} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Previous ayah">
+            <SkipBack size={20} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={togglePlay}
+            className="flex size-14 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 hover:opacity-90 active:scale-90"
             style={{ background: 'var(--accent)' }}
+            aria-label="Play or pause"
           >
-            {ayah.number}
-          </span>
-          <button
-            onClick={() => toggleFavorite(currentSurah.id, ayah.number)}
-            aria-label="Toggle favorite"
-            className="shrink-0 transition"
-            style={{ color: isFavorite(currentSurah.id, ayah.number) ? 'var(--gold)' : 'var(--muted)' }}
-          >
-            <Star size={18} fill={isFavorite(currentSurah.id, ayah.number) ? 'currentColor' : 'none'} />
+            {isPlaying ? <Pause size={24} strokeWidth={2.5} /> : <Play size={24} strokeWidth={2.5} />}
+          </button>
+          <button onClick={nextAyah} disabled={!hasNext} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Next ayah">
+            <SkipForward size={20} strokeWidth={2.5} />
           </button>
         </div>
-        <p dir="rtl" className="font-display mt-4 text-right text-2xl leading-loose text-gray-900">
-          {ayah.text}
-        </p>
-        <p className="mt-4 text-sm leading-relaxed text-gray-600">{ayah.translation}</p>
+
+        {isPlaying && (
+          <div className="mt-1.5 flex justify-center" style={{ color: 'var(--accent)' }}>
+            <EqualizerBars />
+          </div>
+        )}
+
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => { setShowSpeed((v) => !v); setShowReciter(false) }}
+              className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
+            >
+              <Gauge size={13} /> {playbackSpeed}×
+            </button>
+            {showSpeed && (
+              <div className="animate-rise-in absolute top-full left-1/2 mt-2 w-28 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
+                {SPEEDS.map((sp) => (
+                  <button
+                    key={sp}
+                    onClick={() => { setSpeed(sp); setShowSpeed(false) }}
+                    className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
+                    style={sp === playbackSpeed ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
+                  >
+                    {sp}×
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => { setShowReciter((v) => !v); setShowSpeed(false) }}
+              className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
+            >
+              {RECITERS.find((r) => r.id === reciter)?.label ?? reciter}
+            </button>
+            {showReciter && (
+              <div className="animate-rise-in absolute top-full left-1/2 mt-2 w-44 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
+                {RECITERS.map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => { setReciter(r.id); setShowReciter(false) }}
+                    className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
+                    style={r.id === reciter ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
-      {/* transport controls */}
-      <div className="mt-6 flex items-center justify-center gap-6">
-        <button onClick={prevAyah} disabled={!hasPrev} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Previous ayah">
-          <SkipBack size={20} strokeWidth={2.5} />
-        </button>
-        <button
-          onClick={togglePlay}
-          className="flex size-14 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 hover:opacity-90 active:scale-90"
-          style={{ background: 'var(--accent)' }}
-          aria-label="Play or pause"
-        >
-          {isPlaying ? <Pause size={24} strokeWidth={2.5} /> : <Play size={24} strokeWidth={2.5} />}
-        </button>
-        <button onClick={nextAyah} disabled={!hasNext} className="text-gray-600 transition hover:text-gray-900 disabled:opacity-30" aria-label="Next ayah">
-          <SkipForward size={20} strokeWidth={2.5} />
-        </button>
-      </div>
-
-      {isPlaying && (
-        <div className="mt-3 flex justify-center" style={{ color: 'var(--accent)' }}>
-          <EqualizerBars />
-        </div>
-      )}
-
-      {/* speed + reciter */}
-      <div className="mt-6 flex items-center justify-center gap-2">
-        <div className="relative">
-          <button
-            onClick={() => { setShowSpeed((v) => !v); setShowReciter(false) }}
-            className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
-          >
-            <Gauge size={13} /> {playbackSpeed}×
-          </button>
-          {showSpeed && (
-            <div className="animate-rise-in absolute bottom-full left-1/2 mb-2 w-28 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
-              {SPEEDS.map((sp) => (
-                <button
-                  key={sp}
-                  onClick={() => { setSpeed(sp); setShowSpeed(false) }}
-                  className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
-                  style={sp === playbackSpeed ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
+      {/* Full verse list — the reciting ayah is highlighted and kept
+          auto-scrolled into view; tap any verse to jump + play it. */}
+      <div className="mt-2 space-y-3 px-5 pb-6 lg:px-10">
+        {surahData.ayahs.map((a) => {
+          const isActive = a.number === currentAyah
+          return (
+            <div
+              key={a.number}
+              ref={(el) => { ayahRefs.current[a.number] = el }}
+              role="button"
+              tabIndex={0}
+              onClick={() => playAyah(a.number)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') playAyah(a.number) }}
+              className="block w-full cursor-pointer rounded-3xl border p-5 text-left shadow-sm transition-all duration-300"
+              style={{
+                borderColor: isActive ? 'var(--accent)' : 'var(--border)',
+                background: isActive
+                  ? 'linear-gradient(160deg, var(--accent-soft), var(--surface))'
+                  : 'var(--surface)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className="font-data flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white transition-colors duration-300"
+                  style={{ background: isActive ? 'var(--accent)' : 'var(--muted)' }}
                 >
-                  {sp}×
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="relative">
-          <button
-            onClick={() => { setShowReciter((v) => !v); setShowSpeed(false) }}
-            className="rounded-full border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
-          >
-            {RECITERS.find((r) => r.id === reciter)?.label ?? reciter}
-          </button>
-          {showReciter && (
-            <div className="animate-rise-in absolute bottom-full left-1/2 mb-2 w-44 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
-              {RECITERS.map((r) => (
+                  {a.number}
+                </span>
+                {isActive && isPlaying && (
+                  <span style={{ color: 'var(--accent)' }}><EqualizerBars /></span>
+                )}
                 <button
-                  key={r.id}
-                  onClick={() => { setReciter(r.id); setShowReciter(false) }}
-                  className="block w-full rounded-lg px-3 py-1.5 text-left text-xs text-gray-700 transition hover:bg-gray-50"
-                  style={r.id === reciter ? { color: 'var(--accent)', fontWeight: 600 } : undefined}
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(currentSurah.id, a.number) }}
+                  aria-label="Toggle favorite"
+                  className="shrink-0 transition"
+                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--gold)' : 'var(--muted)' }}
                 >
-                  {r.label}
+                  <Star size={16} fill={isFavorite(currentSurah.id, a.number) ? 'currentColor' : 'none'} />
                 </button>
-              ))}
+              </div>
+              <p dir="rtl" className={`font-display mt-3 text-right leading-loose text-gray-900 ${isActive ? 'text-2xl' : 'text-xl'}`}>
+                {a.text}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-gray-600">{a.translation}</p>
             </div>
-          )}
-        </div>
+          )
+        })}
       </div>
 
     </div>

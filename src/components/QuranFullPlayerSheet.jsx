@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ChevronDown, Play, Pause, SkipBack, SkipForward, Gauge, Star, WifiOff,
 } from 'lucide-react'
@@ -20,6 +20,7 @@ function QuranFullPlayerSheet() {
   const togglePlay = useQuranStore((s) => s.togglePlay)
   const nextAyah = useQuranStore((s) => s.nextAyah)
   const prevAyah = useQuranStore((s) => s.prevAyah)
+  const playAyah = useQuranStore((s) => s.playAyah)
   const playbackSpeed = useQuranStore((s) => s.playbackSpeed)
   const setSpeed = useQuranStore((s) => s.setSpeed)
   const reciter = useQuranStore((s) => s.reciter)
@@ -29,10 +30,15 @@ function QuranFullPlayerSheet() {
 
   const [showSpeed, setShowSpeed] = useState(false)
   const [showReciter, setShowReciter] = useState(false)
+  const ayahRefs = useRef({})
+
+  useEffect(() => {
+    if (!isPlayerOpen) return
+    ayahRefs.current[currentAyah]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [currentAyah, isPlayerOpen])
 
   if (!isPlayerOpen || !currentSurah) return null
 
-  const ayah = surahData?.ayahs.find((a) => a.number === currentAyah)
   const idx = surahData?.ayahs.findIndex((a) => a.number === currentAyah) ?? -1
   const total = surahData?.ayahs.length ?? currentSurah.ayatCount ?? 0
   const hasPrev = idx > 0
@@ -66,9 +72,9 @@ function QuranFullPlayerSheet() {
         <div className="h-10 w-10" />
       </header>
 
-      <main className="flex flex-1 flex-col px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))] overflow-y-auto">
-
-        <div className="mt-2 flex items-baseline justify-between">
+      {/* Sticky transport block — verse list scrolls underneath it. */}
+      <div className="shrink-0 px-6">
+        <div className="flex items-baseline justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900">
               {currentSurah.nameEn}
@@ -80,7 +86,7 @@ function QuranFullPlayerSheet() {
           <p className="font-display text-3xl text-gray-800">{currentSurah.nameAr}</p>
         </div>
 
-        <div className="mt-4 shrink-0">
+        <div className="mt-4">
           <div className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
             <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: 'var(--gold)' }} />
           </div>
@@ -89,53 +95,7 @@ function QuranFullPlayerSheet() {
           </p>
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-8">
-          {surahLoading && (
-            <div className="w-full space-y-3">
-              <div className="skeleton mx-auto h-8 w-3/4 rounded-full" />
-              <div className="skeleton mx-auto h-8 w-full rounded-full" />
-              <div className="skeleton mx-auto h-4 w-2/3 rounded-full" />
-            </div>
-          )}
-
-          {!surahLoading && surahError && (
-            <div className="flex flex-col items-center text-center">
-              <WifiOff size={24} style={{ color: 'var(--muted)' }} />
-              <p className="mt-3 text-sm text-gray-500">Couldn't load this surah's audio.</p>
-            </div>
-          )}
-
-          {!surahLoading && ayah && (
-            <div
-              className="animate-rise-in w-full rounded-3xl border border-gray-200 p-6 shadow-sm"
-              style={{ background: 'linear-gradient(160deg, var(--gold-soft), var(--surface))' }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span
-                  className="font-data flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={{ background: 'var(--gold)' }}
-                >
-                  {ayah.number}
-                </span>
-                <button
-                  onClick={() => toggleFavorite(currentSurah.id, ayah.number)}
-                  aria-label="Toggle favorite"
-                  className="shrink-0 transition"
-                  style={{ color: isFavorite(currentSurah.id, ayah.number) ? 'var(--gold)' : 'var(--muted)' }}
-                >
-                  <Star size={18} fill={isFavorite(currentSurah.id, ayah.number) ? 'currentColor' : 'none'} />
-                </button>
-              </div>
-              <p dir="rtl" className="font-display mt-4 text-right text-3xl leading-loose text-gray-900">
-                {ayah.text}
-              </p>
-              <p className="mt-4 text-sm leading-relaxed text-gray-600">{ayah.translation}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center justify-center gap-6">
-
+        <div className="mt-4 flex items-center justify-center gap-6">
           <button
             onClick={prevAyah}
             disabled={!hasPrev}
@@ -159,16 +119,15 @@ function QuranFullPlayerSheet() {
             aria-label="Next ayah">
             <SkipForward size={22} strokeWidth={2.5} />
           </button>
-
         </div>
 
         {isPlaying && (
-          <div className="mt-3 flex justify-center" style={{ color: 'var(--gold)' }}>
+          <div className="mt-1.5 flex justify-center" style={{ color: 'var(--gold)' }}>
             <EqualizerBars />
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-3 flex items-center justify-center gap-2">
 
           <div className="relative">
             <button
@@ -179,7 +138,7 @@ function QuranFullPlayerSheet() {
               {playbackSpeed}×
             </button>
             {showSpeed && (
-              <div className="animate-rise-in absolute bottom-full left-1/2 mb-2 w-28 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
+              <div className="animate-rise-in absolute top-full left-1/2 mt-2 w-28 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
                 {SPEEDS.map((sp) => (
                   <button
                     key={sp}
@@ -202,7 +161,7 @@ function QuranFullPlayerSheet() {
               {RECITERS.find((r) => r.id === reciter)?.label ?? reciter}
             </button>
             {showReciter && (
-              <div className="animate-rise-in absolute bottom-full left-1/2 mb-2 w-44 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
+              <div className="animate-rise-in absolute top-full left-1/2 mt-2 w-44 -translate-x-1/2 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-lg">
                 {RECITERS.map((r) => (
                   <button
                     key={r.id}
@@ -218,6 +177,70 @@ function QuranFullPlayerSheet() {
           </div>
 
         </div>
+      </div>
+
+      {/* Full, auto-scrolling verse list. */}
+      <main className="mt-4 flex-1 space-y-3 overflow-y-auto px-6 pb-[calc(2.5rem+env(safe-area-inset-bottom))]">
+
+        {surahLoading && (
+          <div className="space-y-3 pt-4">
+            <div className="skeleton mx-auto h-8 w-3/4 rounded-full" />
+            <div className="skeleton mx-auto h-8 w-full rounded-full" />
+            <div className="skeleton mx-auto h-4 w-2/3 rounded-full" />
+          </div>
+        )}
+
+        {!surahLoading && surahError && (
+          <div className="flex flex-col items-center pt-8 text-center">
+            <WifiOff size={24} style={{ color: 'var(--muted)' }} />
+            <p className="mt-3 text-sm text-gray-500">Couldn't load this surah's audio.</p>
+          </div>
+        )}
+
+        {!surahLoading && surahData?.ayahs.map((a) => {
+          const isActive = a.number === currentAyah
+          return (
+            <div
+              key={a.number}
+              ref={(el) => { ayahRefs.current[a.number] = el }}
+              role="button"
+              tabIndex={0}
+              onClick={() => playAyah(a.number)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') playAyah(a.number) }}
+              className="cursor-pointer rounded-3xl border p-5 shadow-sm transition-all duration-300"
+              style={{
+                borderColor: isActive ? 'var(--gold)' : 'var(--border)',
+                background: isActive
+                  ? 'linear-gradient(160deg, var(--gold-soft), var(--surface))'
+                  : 'var(--surface)',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span
+                  className="font-data flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white transition-colors duration-300"
+                  style={{ background: isActive ? 'var(--gold)' : 'var(--muted)' }}
+                >
+                  {a.number}
+                </span>
+                {isActive && isPlaying && (
+                  <span style={{ color: 'var(--gold)' }}><EqualizerBars /></span>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(currentSurah.id, a.number) }}
+                  aria-label="Toggle favorite"
+                  className="shrink-0 transition"
+                  style={{ color: isFavorite(currentSurah.id, a.number) ? 'var(--gold)' : 'var(--muted)' }}
+                >
+                  <Star size={16} fill={isFavorite(currentSurah.id, a.number) ? 'currentColor' : 'none'} />
+                </button>
+              </div>
+              <p dir="rtl" className={`font-display mt-3 text-right leading-loose text-gray-900 ${isActive ? 'text-2xl' : 'text-xl'}`}>
+                {a.text}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-gray-600">{a.translation}</p>
+            </div>
+          )
+        })}
 
       </main>
     </div>

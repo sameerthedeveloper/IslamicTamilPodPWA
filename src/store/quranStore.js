@@ -86,6 +86,12 @@ export const useQuranStore = create((set, get) => ({
     if (currentSurah) get().setBookmark(currentSurah.id, ayahId)
   },
 
+  // Tapping a verse in the list jumps to it and starts reciting it.
+  playAyah: (ayahId) => {
+    get().setAyah(ayahId)
+    get().play()
+  },
+
   play: () => {
     usePlayerStore.getState().pause()
     usePlayerStore.getState().closePlayer()
