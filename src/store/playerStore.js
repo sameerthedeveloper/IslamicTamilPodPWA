@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useActivePlayerStore } from './activePlayerStore'
 
 export const usePlayerStore = create((set, get) => ({
   currentEpisode: null,
@@ -35,6 +36,7 @@ export const usePlayerStore = create((set, get) => ({
   },
 
   play: (episode, list) => {
+    useActivePlayerStore.setState({ active: 'episode' })
     if (episode) {
       set({
         currentEpisode: episode,
@@ -50,7 +52,10 @@ export const usePlayerStore = create((set, get) => ({
 
   pause: () => set({ isPlaying: false }),
 
-  togglePlay: () => set((state) => ({ isPlaying: !state.isPlaying })),
+  togglePlay: () => set((state) => {
+    if (!state.isPlaying) useActivePlayerStore.setState({ active: 'episode' })
+    return { isPlaying: !state.isPlaying }
+  }),
 
   next: () => {
     const { queue, currentEpisode } = get()

@@ -1,6 +1,6 @@
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react'
 import { useQuranStore } from '../store/quranStore'
-import { usePlayerStore } from '../store/playerStore'
+import { useActivePlayerStore } from '../store/activePlayerStore'
 import EqualizerBars from './EqualizerBars'
 
 function QuranMiniPlayer() {
@@ -12,22 +12,18 @@ function QuranMiniPlayer() {
     const nextAyah = useQuranStore((s) => s.nextAyah)
     const prevAyah = useQuranStore((s) => s.prevAyah)
     const openPlayer = useQuranStore((s) => s.openPlayer)
-    // The episode MiniPlayer docks at the same spot — when both are
-    // active, stack this one above it instead of overlapping.
-    const episodeActive = usePlayerStore((s) => !!s.currentEpisode)
+    const active = useActivePlayerStore((s) => s.active)
 
-    if (!currentSurah) return null
+    // Only one of {episode, Quran} mini players docks at a time — whichever
+    // the user most recently engaged with.
+    if (!currentSurah || active === 'episode') return null
 
     const total = surahData?.ayahs.length ?? currentSurah.ayatCount ?? 0
     const pct = total ? (currentAyah / total) * 100 : 0
 
     return (
         <div id="quran-mini-player"
-            className={`fixed inset-x-6 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-[calc(32rem-3rem)] sm:-translate-x-1/2 lg:inset-x-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:rounded-none lg:border-x-0 lg:shadow-[0_-4px_16px_rgba(0,0,0,0.06)] ${
-                episodeActive
-                    ? 'bottom-[calc(var(--nav-gap)+9.5rem)] lg:bottom-[4.75rem] lg:border-b'
-                    : 'bottom-[calc(var(--nav-gap)+4.75rem)] lg:bottom-0 lg:border-b-0'
-            }`}>
+            className="fixed inset-x-6 bottom-[calc(var(--nav-gap)+4.75rem)] z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-[calc(32rem-3rem)] sm:-translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
 
             <div className="h-0.5 w-full bg-gray-100">
                 <div
