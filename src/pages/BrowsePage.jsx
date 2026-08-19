@@ -78,7 +78,7 @@ function BrowsePage() {
     const otherResults = results?.filter((r) => r.type !== 'episode') ?? []
 
     return (
-        <div className="px-5 pt-6">
+        <div className="px-5 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-10">
 
             <h1 className="font-display text-3xl font-semibold tracking-tight text-gray-900">
                 Discover
@@ -151,7 +151,7 @@ function BrowsePage() {
                     </h2>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
 
                     {topics.length === 0 && (
                         <div className="col-span-2 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">

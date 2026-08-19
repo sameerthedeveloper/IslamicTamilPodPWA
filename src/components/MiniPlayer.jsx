@@ -17,7 +17,7 @@ function MiniPlayer() {
 
     return (
         <div id="mini-player"
-            className="fixed inset-x-6 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-[calc(32rem-3rem)] sm:-translate-x-1/2">
+            className="fixed inset-x-6 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-[calc(32rem-3rem)] sm:-translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
 
             <div className="h-0.5 w-full bg-gray-100">
                 <div
