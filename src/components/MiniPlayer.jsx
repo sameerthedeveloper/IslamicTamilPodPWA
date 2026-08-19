@@ -1,5 +1,6 @@
 import { Play, Pause, FastForwardIcon, RewindIcon } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
+import { useActivePlayerStore } from '../store/activePlayerStore'
 import EqualizerBars from './EqualizerBars'
 
 function MiniPlayer() {
@@ -11,8 +12,11 @@ function MiniPlayer() {
     const openPlayer = usePlayerStore((s) => s.openPlayer)
     const currentTime = usePlayerStore((s) => s.currentTime)
     const duration = usePlayerStore((s) => s.duration)
+    const active = useActivePlayerStore((s) => s.active)
 
-    if (!currentEpisode) return null
+    // Only one of {episode, Quran} mini players docks at a time — whichever
+    // the user most recently engaged with.
+    if (!currentEpisode || active === 'quran') return null
 
     const pct = duration ? Math.min(100, (currentTime / duration) * 100) : 0
 

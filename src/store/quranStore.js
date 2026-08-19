@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { getSurahWithTranslation, FALLBACK_RECITER } from '../api/quranCloud'
 import { usePlayerStore } from './playerStore'
+import { useActivePlayerStore } from './activePlayerStore'
 
 const LS_BOOKMARK = 'quran:bookmark'
 const LS_FAVORITES = 'quran:favorites'
@@ -50,6 +51,7 @@ export const useQuranStore = create((set, get) => ({
   openSurah: (surahMeta, jumpAyah) => {
     usePlayerStore.getState().pause()
     usePlayerStore.getState().closePlayer()
+    useActivePlayerStore.setState({ active: 'quran' })
     const requestId = Symbol('surah-load')
     set({
       currentSurah: surahMeta,
@@ -95,6 +97,7 @@ export const useQuranStore = create((set, get) => ({
   play: () => {
     usePlayerStore.getState().pause()
     usePlayerStore.getState().closePlayer()
+    useActivePlayerStore.setState({ active: 'quran' })
     set({ isPlaying: true })
   },
   pause: () => set({ isPlaying: false }),
