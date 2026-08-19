@@ -13,7 +13,7 @@ function BottomNavBar() {
 
   return (
     <nav
-      className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 rounded-[28px] border p-2 shadow-xl backdrop-blur-sm lg:hidden"
+      className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 rounded-full border p-2 shadow-xl backdrop-blur-sm lg:hidden"
       style={{ background: 'rgba(255,255,255,0.95)', borderColor: 'var(--border)' }}
     >
       <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
