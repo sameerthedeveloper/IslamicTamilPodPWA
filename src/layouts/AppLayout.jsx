@@ -12,7 +12,19 @@ function AppLayout() {
   const isQuran = pathname === '/quran'
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
+    <div
+      className="flex h-screen flex-col overflow-hidden lg:flex-row"
+      style={{
+        // Floating bottom chrome's distance from the screen edge. Plain
+        // addition (baseline + env(safe-area-inset-bottom)) double-counts
+        // once installed as a standalone PWA: in a regular browser tab the
+        // inset is 0 so it read fine, but standalone iOS reports a real
+        // ~34px inset, and baseline-on-top-of-that stacked into a much
+        // bigger gap than intended. max() makes the baseline a floor for
+        // the no-inset case instead of an addend on top of a real one.
+        '--nav-gap': 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.5rem))',
+      }}
+    >
       <Sidebar />
       <TopBar />
 
