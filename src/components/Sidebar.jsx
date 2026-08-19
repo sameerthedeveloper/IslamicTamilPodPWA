@@ -21,7 +21,7 @@ function Sidebar() {
     }
 
     return (
-        <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-gray-200 bg-gray-100/95 backdrop-blur lg:flex">
+        <aside className="fixed inset-y-3 ml-3 inset-x-3 rounded-3xl shadow left-0 z-50 hidden w-64 flex-col border border-gray-200 bg-gray-100/95 backdrop-blur lg:flex">
             <div className="px-6 pt-8 pb-6">
                 <p className="font-display text-xl font-semibold tracking-tight text-gray-900">
                     Tamil Islamic
