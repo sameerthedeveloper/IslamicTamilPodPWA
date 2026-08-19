@@ -49,6 +49,7 @@ export const useQuranStore = create((set, get) => ({
   // any episode playback so the two audio sources never overlap.
   openSurah: (surahMeta, jumpAyah) => {
     usePlayerStore.getState().pause()
+    usePlayerStore.getState().closePlayer()
     const requestId = Symbol('surah-load')
     set({
       currentSurah: surahMeta,
@@ -72,7 +73,11 @@ export const useQuranStore = create((set, get) => ({
 
   closeSurah: () => set({ currentSurah: null, surahData: null, isPlaying: false, isPlayerOpen: false }),
 
-  openPlayer: () => set((state) => (state.currentSurah ? { isPlayerOpen: true } : state)),
+  openPlayer: () => {
+    // Only one full-screen player sheet can be open at a time.
+    usePlayerStore.getState().closePlayer()
+    set((state) => (state.currentSurah ? { isPlayerOpen: true } : state))
+  },
   closePlayer: () => set({ isPlayerOpen: false }),
 
   setAyah: (ayahId) => {
@@ -83,6 +88,7 @@ export const useQuranStore = create((set, get) => ({
 
   play: () => {
     usePlayerStore.getState().pause()
+    usePlayerStore.getState().closePlayer()
     set({ isPlaying: true })
   },
   pause: () => set({ isPlaying: false }),
@@ -144,7 +150,17 @@ export const useQuranStore = create((set, get) => ({
 }))
 
 // Episode playback (playerStore) pausing Quran playback in return, so
-// starting an episode from anywhere in the app stops Quran audio too.
+// starting an episode from anywhere in the app stops Quran audio too —
+// and closes its full-screen sheet, so the two full players can never be
+// open (and rendered fullscreen, stacked) at the same time.
 usePlayerStore.subscribe((state, prev) => {
-  if (state.isPlaying && !prev.isPlaying) useQuranStore.getState().pause()
+  if (state.isPlaying && !prev.isPlaying) {
+    useQuranStore.getState().pause()
+    useQuranStore.getState().closePlayer()
+  }
+  // Opening the episode full-player sheet (even without a fresh play())
+  // should collapse the Quran one so they're never both fullscreen.
+  if (state.isPlayerOpen && !prev.isPlayerOpen) {
+    useQuranStore.getState().closePlayer()
+  }
 })
