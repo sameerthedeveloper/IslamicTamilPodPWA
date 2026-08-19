@@ -101,6 +101,17 @@ function NativeAudioEngine() {
   )
 }
 
+// YouTube's iframe API only exposes one quality knob and it's video
+// resolution — there's no separate audio-bitrate control, and audio
+// barely changes across resolution tiers anyway. So "lowest data, same
+// audio" just means: pin video to the smallest available tier. Bandwidth
+// is overwhelmingly video, so this is most of the win available here.
+function forceLowestQuality(player) {
+  const levels = player?.getAvailableQualityLevels?.()
+  const lowest = levels?.length ? levels[levels.length - 1] : 'small'
+  player?.setPlaybackQuality?.(lowest)
+}
+
 function YoutubeEngine() {
   const containerRef = useRef(null)
   const playerRef = useRef(null)
@@ -133,6 +144,10 @@ function YoutubeEngine() {
           modestbranding: 1,
           playsinline: 1,
           origin: window.location.origin,
+          // Undocumented but harmless hint some clients still honor as a
+          // starting point — the real enforcement is setPlaybackQuality
+          // below, since this alone isn't reliable.
+          vq: 'small',
         },
         events: {
           onReady: () => {
@@ -145,10 +160,19 @@ function YoutubeEngine() {
               },
             })
             playerRef.current.setVolume(volume * 100)
+            forceLowestQuality(playerRef.current)
           },
           onStateChange: (e) => {
             if (e.data === YT.PlayerState.ENDED) onEnded()
+            // Starting a new video (or resuming) can silently reset
+            // YouTube's own quality choice — re-pin it each time.
+            if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.CUED) {
+              forceLowestQuality(playerRef.current)
+            }
           },
+          // YouTube can still bump itself back up mid-playback (e.g. once
+          // it decides the connection can handle more) — pin it back down.
+          onPlaybackQualityChange: () => forceLowestQuality(playerRef.current),
         },
       })
     })
