@@ -18,6 +18,7 @@ function AuthLayout({ children }) {
             backgroundSize: '48px 48px',
           }}
         />
+        <div className="pattern-star pointer-events-none absolute inset-0 opacity-[0.05]" />
 
         <div
           className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold backdrop-blur-sm"

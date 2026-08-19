@@ -1,5 +1,6 @@
 import { Play, Pause, FastForwardIcon, RewindIcon } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
+import EqualizerBars from './EqualizerBars'
 
 function MiniPlayer() {
     const currentEpisode = usePlayerStore((s) => s.currentEpisode)
@@ -35,7 +36,7 @@ function MiniPlayer() {
 
 
                 <div
-                    className="font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden"
+                    className={`font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden transition-shadow duration-300 ${isPlaying ? 'animate-glow-pulse' : ''}`}
                     style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
                     {currentEpisode.thumbnail ? (
                         <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
@@ -48,9 +49,16 @@ function MiniPlayer() {
 
                 <div className="min-w-0">
 
-                    <p className="truncate text-md font-semibold text-gray-900">
-                        {currentEpisode.title ?? 'Untitled'}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                        <p className="truncate text-md font-semibold text-gray-900">
+                            {currentEpisode.title ?? 'Untitled'}
+                        </p>
+                        {isPlaying && (
+                            <span className="shrink-0" style={{ color: 'var(--accent)' }}>
+                                <EqualizerBars />
+                            </span>
+                        )}
+                    </div>
 
                     {currentEpisode.scholar?.name && (
                         <p className="truncate text-xs text-gray-500">
@@ -74,7 +82,7 @@ function MiniPlayer() {
 
                 <button
                     onClick={(e) => { e.stopPropagation(); togglePlay() }}
-                    className="flex size-10 items-center justify-center rounded-full text-white transition hover:opacity-90"
+                    className="flex size-10 items-center justify-center rounded-full text-white transition-transform duration-150 hover:opacity-90 active:scale-90"
                     style={{ background: 'var(--accent)' }}
                     aria-label="Play or pause">
                     {isPlaying ? <Pause size={18} strokeWidth={3}/> : <Play size={18} strokeWidth={3}/>}

@@ -18,15 +18,15 @@ function BottomNavigationBar() {
                         to={to}
                         end={end}
                         className={({ isActive }) =>
-                            `flex flex-col items-center justify-center gap-1 rounded-full py-2.5 transition-all duration-200 ${
+                            `flex flex-col items-center justify-center gap-1 rounded-full py-2.5 transition-all duration-300 ease-out ${
                                 isActive
-                                    ? 'text-white shadow-sm'
+                                    ? 'text-white shadow-sm scale-105'
                                     : 'text-gray-500 hover:bg-gray-100 hover:text-gray-950'
                             }`
                         }
                         style={({ isActive }) => (isActive ? { background: 'var(--accent)' } : undefined)}
                     >
-                        <Icon size={17} strokeWidth={3} />
+                        <Icon size={17} strokeWidth={3} className="transition-transform duration-300" />
                         <span className="text-[11px] font-medium leading-none">
                             {label}
                         </span>

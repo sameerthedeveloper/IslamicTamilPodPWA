@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
 import BookmarkButton from './BookmarkButton'
+import EqualizerBars from './EqualizerBars'
 
 const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75]
 const SLEEP_OPTIONS = [15, 30, 45, 60]
@@ -84,8 +85,9 @@ function FullPlayerSheet() {
       <main className="flex flex-1 flex-col items-center justify-center px-8 pb-[calc(2.5rem+env(safe-area-inset-bottom))] overflow-y-auto">
 
         <div
-          className="flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 shadow-xl"
+          className={`relative flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-gray-200 shadow-xl transition-shadow duration-500 ${isPlaying ? 'animate-glow-pulse' : ''}`}
           style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
+          <div className="pattern-star pointer-events-none absolute inset-0 opacity-[0.06]" />
           {currentEpisode.thumbnail ? (
             <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -97,9 +99,16 @@ function FullPlayerSheet() {
 
         <div className="mt-10 flex w-full max-w-sm items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900 truncate">
-              {currentEpisode.title ?? 'Title'}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl font-semibold tracking-tight text-gray-900 truncate">
+                {currentEpisode.title ?? 'Title'}
+              </h1>
+              {isPlaying && (
+                <span className="shrink-0" style={{ color: 'var(--accent)' }}>
+                  <EqualizerBars />
+                </span>
+              )}
+            </div>
             {currentEpisode.scholar?.name && (
               <p className="mt-1 text-sm text-gray-500 truncate">
                 {currentEpisode.scholar.name}
@@ -145,7 +154,7 @@ function FullPlayerSheet() {
 
           <button
             onClick={togglePlay}
-            className="flex size-16 items-center justify-center rounded-full text-white shadow-lg transition hover:opacity-90"
+            className="flex size-16 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-150 hover:opacity-90 active:scale-90"
             style={{ background: 'var(--accent)' }}
             aria-label="Play or pause">
             {isPlaying ? <Pause size={28} strokeWidth={2.5} /> : <Play size={28} strokeWidth={2.5} />}
