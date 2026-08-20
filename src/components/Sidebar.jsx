@@ -89,7 +89,7 @@ function Sidebar() {
                     className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition "
                 >
                     <span
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-white text-sm font-semibold shadow-sm"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-(--border) bg-white text-sm font-semibold shadow-sm"
                         style={{ color: 'var(--accent)' }}
                     >
                         {initial}

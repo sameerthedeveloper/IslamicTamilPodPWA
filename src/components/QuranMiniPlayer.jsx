@@ -23,7 +23,7 @@ function QuranMiniPlayer() {
 
     return (
         <div id="quran-mini-player"
-            className="fixed inset-x-6 bottom-22 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-[calc(32rem-3rem)] sm:-translate-x-1/2 lg:mx-10 lg:bottom-0 lg:mb-3  lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:rounded-full lg:border lg:border-gray-300 lg:shadow">
+            className="fixed inset-x-6 bottom-22 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-116 sm:-translate-x-1/2 lg:mx-10 lg:bottom-0 lg:mb-3  lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:rounded-full lg:border lg:border-gray-300 lg:shadow">
 
             <div className="h-0.5 w-full bg-gray-100">
                 <div
