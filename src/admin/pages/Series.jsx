@@ -32,7 +32,9 @@ function Series() {
 
   const submit = async () => {
     setError('')
-    const payload = { title: form.title, scholarId: form.scholarId, description: form.description || undefined, status: form.status }
+    // Firestore's addDoc/updateDoc reject `undefined` field values outright
+    // (the whole write throws) — use null for "not set" instead.
+    const payload = { title: form.title, scholarId: form.scholarId, description: form.description || null, status: form.status }
     try {
       if (form.id) await seriesApi.update(form.id, payload)
       else await seriesApi.create(payload)

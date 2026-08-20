@@ -22,7 +22,7 @@ function Scholars() {
   useEffect(load, [])
 
   const openCreate = () => { setForm(emptyForm); setError(''); setModalOpen(true) }
-  const openEdit = (s) => { setForm({ id: s.id, name: s.name, biography: s.biography ?? '', status: s.status }); setError(''); setModalOpen(true) }
+  const openEdit = (s) => { setForm({ id: s.id, name: s.name, biography: s.biography ?? '', status: s.status ?? 'ACTIVE' }); setError(''); setModalOpen(true) }
 
   const submit = async () => {
     setError('')
@@ -30,7 +30,7 @@ function Scholars() {
       if (form.id) {
         await scholarsApi.update(form.id, { name: form.name, biography: form.biography, status: form.status })
       } else {
-        await scholarsApi.create({ name: form.name, biography: form.biography })
+        await scholarsApi.create({ name: form.name, biography: form.biography, status: 'ACTIVE' })
       }
       setModalOpen(false)
       load()

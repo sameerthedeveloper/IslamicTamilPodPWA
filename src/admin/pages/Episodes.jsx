@@ -117,10 +117,12 @@ function Episodes() {
       // Denormalized so the public app (Home/Discover/Library/player) can
       // render scholar/series info without an extra fetch per episode.
       scholar: scholar ? { name: scholar.name } : null,
-      seriesId: form.seriesId || undefined,
+      // Firestore's addDoc/updateDoc reject `undefined` field values
+      // outright (the whole write throws) — use null for "not set" instead.
+      seriesId: form.seriesId || null,
       series: seriesEntry ? { title: seriesEntry.title } : null,
       topics: form.topics,
-      description: form.description || undefined,
+      description: form.description || null,
       status: form.status,
       sourceType: youtubeId ? 'YOUTUBE' : 'UPLOAD',
       youtubeId: youtubeId ?? null,
