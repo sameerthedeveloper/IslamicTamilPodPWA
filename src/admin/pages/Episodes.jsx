@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, UploadCloud, Ban } from 'lucide-react'
+import { Plus, Pencil, Trash2, UploadCloud, Ban, X } from 'lucide-react'
 import TopBar from '../components/TopBar'
 import DataTable from '../components/DataTable'
 import StatusPill from '../components/StatusPill'
@@ -34,6 +34,10 @@ function Episodes() {
   const [error, setError] = useState('')
   const [ytPreview, setYtPreview] = useState(null)
   const [ytLoading, setYtLoading] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [bulkScholarId, setBulkScholarId] = useState('')
+  const [bulkSeriesId, setBulkSeriesId] = useState('')
+  const [bulkApplying, setBulkApplying] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -150,6 +154,55 @@ function Episodes() {
     load()
   }
 
+  const toggleRow = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleRows = (ids, select) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => (select ? next.add(id) : next.delete(id)))
+      return next
+    })
+  }
+
+  const clearSelection = () => {
+    setSelectedIds(new Set())
+    setBulkScholarId('')
+    setBulkSeriesId('')
+  }
+
+  // Applies scholar and/or series (whichever the admin picked) to every
+  // selected episode in one batched write — e.g. assigning a batch of
+  // seeded/imported episodes to a scholar or series at once.
+  const applyBulkAssign = async () => {
+    if (!bulkScholarId && !bulkSeriesId) return
+    setBulkApplying(true)
+    try {
+      const data = {}
+      if (bulkScholarId) {
+        const scholar = scholars.find((s) => s.id === bulkScholarId)
+        data.scholarId = bulkScholarId
+        data.scholar = scholar ? { name: scholar.name } : null
+      }
+      if (bulkSeriesId) {
+        const seriesEntry = series.find((s) => s.id === bulkSeriesId)
+        data.seriesId = bulkSeriesId
+        data.series = seriesEntry ? { title: seriesEntry.title } : null
+      }
+      await episodesApi.bulkUpdate(Array.from(selectedIds), data)
+      clearSelection()
+      load()
+    } finally {
+      setBulkApplying(false)
+    }
+  }
+
   const toggleTopic = (name) => {
     setForm((f) => ({
       ...f,
@@ -173,12 +226,63 @@ function Episodes() {
           </button>
         </div>
 
+        {selectedIds.size > 0 && (
+          <div
+            className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3"
+            style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)' }}
+          >
+            <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>
+              {selectedIds.size} selected
+            </span>
+
+            <div className="w-48">
+              <SearchableSelect
+                options={scholars}
+                value={bulkScholarId || null}
+                onChange={(id) => setBulkScholarId(id ?? '')}
+                placeholder="Assign scholar…"
+              />
+            </div>
+
+            <div className="w-48">
+              <SearchableSelect
+                options={series}
+                value={bulkSeriesId || null}
+                onChange={(id) => setBulkSeriesId(id ?? '')}
+                getLabel={(s) => s.title}
+                placeholder="Assign series…"
+              />
+            </div>
+
+            <button
+              onClick={applyBulkAssign}
+              disabled={bulkApplying || (!bulkScholarId && !bulkSeriesId)}
+              className="rounded-xl px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+              style={{ background: 'var(--accent)' }}
+            >
+              {bulkApplying ? 'Applying…' : 'Apply'}
+            </button>
+
+            <button
+              onClick={clearSelection}
+              className="ml-auto flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium"
+              style={{ color: 'var(--muted)' }}
+            >
+              <X size={14} /> Clear
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-sm" style={{ color: 'var(--muted)' }}>Loading…</p>
         ) : (
           <DataTable
             rows={episodes}
             emptyLabel="No episodes yet."
+            selectable
+            selectedIds={selectedIds}
+            onToggleRow={toggleRow}
+            onToggleRows={toggleRows}
             columns={[
               { key: 'title', label: 'Title', sortable: true },
               { key: 'scholar', label: 'Scholar', render: (r) => r.scholar?.name },

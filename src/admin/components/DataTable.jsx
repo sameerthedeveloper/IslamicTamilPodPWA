@@ -3,7 +3,10 @@ import { ChevronUp, ChevronDown, Inbox } from 'lucide-react'
 
 const PAGE_SIZE = 10
 
-function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.' }) {
+function DataTable({
+  columns, rows, rowKey = 'id', emptyLabel = 'No records yet.',
+  selectable = false, selectedIds, onToggleRow, onToggleRows,
+}) {
   const [sortKey, setSortKey] = useState(null)
   const [sortDir, setSortDir] = useState(1)
   const [page, setPage] = useState(1)
@@ -32,6 +35,9 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
     }
   }
 
+  const pageIds = pageRows.map((r) => r[rowKey])
+  const allOnPageSelected = selectable && pageIds.length > 0 && pageIds.every((id) => selectedIds?.has(id))
+
   if (rows.length === 0) {
     return (
       <div
@@ -50,6 +56,16 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
         <table className="w-full text-sm">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border)' }}>
+              {selectable && (
+                <th className="w-10 px-5 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allOnPageSelected}
+                    onChange={() => onToggleRows?.(pageIds, !allOnPageSelected)}
+                    aria-label="Select all rows on this page"
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -68,19 +84,32 @@ function DataTable({ columns, rows, rowKey = 'id', emptyLabel = 'No records yet.
             </tr>
           </thead>
           <tbody>
-            {pageRows.map((row) => (
-              <tr
-                key={row[rowKey]}
-                className="transition-colors hover:bg-[var(--base)]"
-                style={{ borderBottom: '1px solid var(--border)' }}
-              >
-                {columns.map((col) => (
-                  <td key={col.key} className="px-5 py-3 align-middle">
-                    {col.render ? col.render(row) : row[col.key]}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {pageRows.map((row) => {
+              const id = row[rowKey]
+              return (
+                <tr
+                  key={id}
+                  className="transition-colors hover:bg-[var(--base)]"
+                  style={{ borderBottom: '1px solid var(--border)' }}
+                >
+                  {selectable && (
+                    <td className="px-5 py-3 align-middle">
+                      <input
+                        type="checkbox"
+                        checked={!!selectedIds?.has(id)}
+                        onChange={() => onToggleRow?.(id)}
+                        aria-label="Select row"
+                      />
+                    </td>
+                  )}
+                  {columns.map((col) => (
+                    <td key={col.key} className="px-5 py-3 align-middle">
+                      {col.render ? col.render(row) : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

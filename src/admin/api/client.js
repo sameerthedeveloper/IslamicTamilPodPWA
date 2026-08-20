@@ -47,6 +47,17 @@ async function removeDoc(name, id) {
   return { id }
 }
 
+// Firestore batched writes cap at 500 ops — chunk well under that.
+const BATCH_CHUNK_SIZE = 400
+
+async function bulkUpdateDocs(name, ids, data) {
+  for (let i = 0; i < ids.length; i += BATCH_CHUNK_SIZE) {
+    const batch = writeBatch(db)
+    ids.slice(i, i + BATCH_CHUNK_SIZE).forEach((id) => batch.update(doc(db, name, id), data))
+    await batch.commit()
+  }
+}
+
 // Episodes — full CRUD
 export const episodesApi = {
   list: (page = 1, limit = 50) => listPaged('episodes', page, limit),
@@ -54,6 +65,9 @@ export const episodesApi = {
   create: (data) => createDoc('episodes', data),
   update: (id, data) => updateDocById('episodes', id, data),
   remove: (id) => removeDoc('episodes', id),
+  // Applies the same field(s) to many episodes at once — e.g. assigning a
+  // batch of imported/seeded episodes to a scholar or series in one go.
+  bulkUpdate: (ids, data) => bulkUpdateDocs('episodes', ids, data),
 }
 
 // Scholars — create/list/update/delete
