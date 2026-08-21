@@ -13,6 +13,7 @@ import Dashboard from './admin/pages/Dashboard'
 import Episodes from './admin/pages/Episodes'
 import Scholars from './admin/pages/Scholars'
 import Series from './admin/pages/Series'
+import Playlists from './admin/pages/Playlists'
 import Topics from './admin/pages/Topics'
 import Audio from './admin/pages/Audio'
 import Rights from './admin/pages/Rights'
@@ -40,6 +41,7 @@ function App() {
         <Route path="episodes" element={<Episodes />} />
         <Route path="scholars" element={<Scholars />} />
         <Route path="series" element={<Series />} />
+        <Route path="playlists" element={<Playlists />} />
         <Route path="topics" element={<Topics />} />
         <Route path="audio" element={<Audio />} />
         <Route path="rights" element={<Rights />} />

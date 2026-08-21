@@ -86,10 +86,20 @@ export const seriesApi = {
   remove: (id) => removeDoc('series', id),
 }
 
-// Topics — create/list only
+// Topics (shown in admin as "Categories") — full CRUD
 export const topicsApi = {
   list: () => listAll('topics', 'name'),
   create: (data) => createDoc('topics', data),
+  update: (id, data) => updateDocById('topics', id, data),
+  remove: (id) => removeDoc('topics', id),
+}
+
+// Playlists — ordered lists of episodes, full CRUD
+export const playlistsApi = {
+  list: () => listAll('playlists', 'createdAt'),
+  create: (data) => createDoc('playlists', data),
+  update: (id, data) => updateDocById('playlists', id, data),
+  remove: (id) => removeDoc('playlists', id),
 }
 
 // Audio — upload a file to Storage and store its URL on the episode doc

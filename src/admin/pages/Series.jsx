@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, ListOrdered, GripVertical } from 'lucide-react'
 import TopBar from '../components/TopBar'
 import DataTable from '../components/DataTable'
 import StatusPill from '../components/StatusPill'
 import FormModal from '../components/FormModal'
 import SearchableSelect from '../components/SearchableSelect'
 import ImageUpload from '../components/ImageUpload'
-import { seriesApi, scholarsApi } from '../api/client'
+import { seriesApi, scholarsApi, episodesApi } from '../api/client'
 
 const STATUSES = ['DRAFT', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED']
 const emptyForm = { id: null, title: '', scholarId: '', description: '', status: 'DRAFT' }
@@ -18,6 +18,9 @@ function Series() {
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
+  const [reorderSeries, setReorderSeries] = useState(null)
+  const [reorderEpisodes, setReorderEpisodes] = useState([])
+  const [dragIndex, setDragIndex] = useState(null)
 
   const load = () => {
     setLoading(true)
@@ -51,6 +54,32 @@ function Series() {
     load()
   }
 
+  // Drag-reorder the episodes within one series — sets each episode's
+  // `position` so the public app's card grid follows series order instead
+  // of recency for episodes that belong together.
+  const openReorder = async (s) => {
+    setReorderSeries(s)
+    const all = await episodesApi.list(1, 200)
+    const inSeries = (all.data ?? [])
+      .filter((ep) => ep.seriesId === s.id)
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    setReorderEpisodes(inSeries)
+  }
+
+  const persistReorder = async (next) => {
+    setReorderEpisodes(next)
+    await Promise.all(next.map((ep, i) => episodesApi.update(ep.id, { position: i })))
+  }
+
+  const onReorderDrop = (index) => {
+    if (dragIndex === null || dragIndex === index) return
+    const next = [...reorderEpisodes]
+    const [moved] = next.splice(dragIndex, 1)
+    next.splice(index, 0, moved)
+    setDragIndex(null)
+    persistReorder(next)
+  }
+
   return (
     <>
       <TopBar crumb="Content" title="Series" />
@@ -76,6 +105,7 @@ function Series() {
                 label: '',
                 render: (r) => (
                   <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => openReorder(r)} title="Reorder episodes" className="rounded p-1.5" style={{ color: 'var(--muted)' }}><ListOrdered size={15} /></button>
                     <button onClick={() => openEdit(r)} className="rounded p-1.5" style={{ color: 'var(--muted)' }}><Pencil size={15} /></button>
                     <button onClick={() => remove(r)} className="rounded p-1.5" style={{ color: 'var(--danger)' }}><Trash2 size={15} /></button>
                   </div>
@@ -117,6 +147,39 @@ function Series() {
             {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+      </FormModal>
+
+      <FormModal
+        open={!!reorderSeries}
+        title={`Reorder — ${reorderSeries?.title ?? ''}`}
+        onClose={() => setReorderSeries(null)}
+        onSubmit={() => setReorderSeries(null)}
+        submitLabel="Done"
+      >
+        {reorderEpisodes.length === 0 ? (
+          <p className="text-sm" style={{ color: 'var(--muted)' }}>No episodes assigned to this series yet.</p>
+        ) : (
+          <div className="rounded-2xl" style={{ border: '1px solid var(--border)' }}>
+            {reorderEpisodes.map((ep, i) => (
+              <div
+                key={ep.id}
+                draggable
+                onDragStart={() => setDragIndex(i)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => onReorderDrop(i)}
+                className="flex items-center gap-2 px-3 py-2"
+                style={i < reorderEpisodes.length - 1 ? { borderBottom: '1px solid var(--border)' } : undefined}
+              >
+                <GripVertical size={14} className="cursor-grab" style={{ color: 'var(--muted)' }} />
+                <span className="font-data text-xs" style={{ color: 'var(--muted)' }}>{i + 1}</span>
+                <p className="min-w-0 flex-1 truncate text-sm" style={{ color: 'var(--ink)' }}>{ep.title}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="text-[11px]" style={{ color: 'var(--muted)' }}>
+          Drag to reorder — saves automatically as you drop.
+        </p>
       </FormModal>
     </>
   )

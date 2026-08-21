@@ -16,11 +16,40 @@ function withId(snap) {
   return { id: snap.id, ...snap.data() }
 }
 
+// Episodes that share a series should read in the admin-set series order
+// (Series page → "Reorder"), not recency — but the overall feed should
+// still place each series where its most recent entry would land. Doing
+// this as a client-side resort (rather than a Firestore orderBy) avoids
+// needing a composite index for status+position+createdAt.
+function orderWithinSeries(episodes) {
+  const groupKey = (ep) => ep.seriesId || `_solo_${ep.id}`
+  const groups = new Map()
+  episodes.forEach((ep) => {
+    const key = groupKey(ep)
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(ep)
+  })
+  groups.forEach((group, key) => {
+    if (key.startsWith('_solo_')) return
+    group.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+  })
+
+  const seen = new Set()
+  const result = []
+  episodes.forEach((ep) => {
+    const key = groupKey(ep)
+    if (seen.has(key)) return
+    seen.add(key)
+    result.push(...groups.get(key))
+  })
+  return result
+}
+
 async function publishedEpisodes() {
   const snap = await getDocs(
     query(collection(db, 'episodes'), where('status', '==', 'PUBLISHED'), orderBy('createdAt', 'desc')),
   )
-  return snap.docs.map(withId)
+  return orderWithinSeries(snap.docs.map(withId))
 }
 
 export async function getEpisodes(page, limit) {

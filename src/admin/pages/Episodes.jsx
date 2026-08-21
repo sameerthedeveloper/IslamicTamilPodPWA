@@ -20,6 +20,7 @@ const emptyForm = {
   description: '',
   youtubeUrl: '',
   status: 'DRAFT',
+  position: 0,
 }
 
 function Episodes() {
@@ -77,6 +78,7 @@ function Episodes() {
       description: ep.description ?? '',
       youtubeUrl: ep.youtubeId ?? '',
       status: ep.status,
+      position: ep.position ?? 0,
     })
     setYtPreview(ep.youtubeId ? { thumbnail: ep.thumbnail } : null)
     setError('')
@@ -124,6 +126,9 @@ function Episodes() {
       topics: form.topics,
       description: form.description || null,
       status: form.status,
+      // Manual ordering within a series — the public app sorts episodes
+      // that share a series by this (ascending) instead of recency.
+      position: Number(form.position) || 0,
       sourceType: youtubeId ? 'YOUTUBE' : 'UPLOAD',
       youtubeId: youtubeId ?? null,
       ...(ytPreview?.thumbnail && { thumbnail: ytPreview.thumbnail }),
@@ -371,6 +376,22 @@ function Episodes() {
             placeholder="No series"
           />
         </div>
+
+        {form.seriesId && (
+          <div>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Position in series</label>
+            <input
+              type="number"
+              value={form.position}
+              onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))}
+              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+              style={{ border: '1px solid var(--border)' }}
+            />
+            <p className="mt-1 text-[11px]" style={{ color: 'var(--muted)' }}>
+              Lower numbers show first. Or use "Reorder" on the Series page to drag into order.
+            </p>
+          </div>
+        )}
 
         <div>
           <label className="mb-1 block text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Topics</label>
