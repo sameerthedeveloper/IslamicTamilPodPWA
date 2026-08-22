@@ -157,6 +157,13 @@ export async function removeBookmark(episodeId) {
   await deleteDoc(doc(db, 'users', uid, 'bookmarks', String(episodeId)))
 }
 
+export async function clearHistory() {
+  const uid = auth.currentUser?.uid
+  if (!uid) return
+  const snap = await getDocs(collection(db, 'users', uid, 'history'))
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)))
+}
+
 export async function getHistory(limit = 20) {
   const user = auth.currentUser
   if (!user) return []
