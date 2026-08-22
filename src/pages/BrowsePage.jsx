@@ -12,6 +12,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const ICONS = [Mic, BookOpen, GraduationCap, Users]
 
+function SectionHeading({ children }) {
+    return (
+        <div className="flex items-center gap-2.5">
+            <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+            <h2 className="font-display text-xl font-semibold text-gray-900">{children}</h2>
+        </div>
+    )
+}
+
 // Series results have nowhere to go yet (no series detail page), so they
 // stay a plain, non-interactive row — scholars get the real ScholarListRow.
 function SeriesRow({ item }) {
@@ -31,11 +40,27 @@ function SeriesRow({ item }) {
     )
 }
 
+function ChipSkeleton() {
+    return <div className="skeleton h-[38px] w-28 rounded-full" />
+}
+
+function ScholarCardSkeleton() {
+    return (
+        <div className="flex h-50 flex-col rounded-2xl border border-gray-200 bg-white p-2">
+            <div className="skeleton flex-1 rounded-xl" />
+            <div className="skeleton mt-2 h-3.5 w-3/4 rounded-full" />
+            <div className="skeleton mt-1.5 h-3 w-1/2 rounded-full" />
+        </div>
+    )
+}
+
 function BrowsePage() {
     const [query, setQuery] = useState('')
     const [results, setResults] = useState(null)
     const [searching, setSearching] = useState(false)
     const [activeTopic, setActiveTopic] = useState(null)
+
+    const isSearchActive = results !== null
 
     // Same query keys as HomePage — switching Home <-> Discover reuses the
     // exact same cached topics/scholars instead of refetching.
@@ -118,7 +143,11 @@ function BrowsePage() {
                 )}
             </div>
 
-            {results !== null && (
+            {/* While a search is active, that's the only thing worth looking
+                at — showing the full category/scholar browse below it too
+                is just noise competing for attention with what the person
+                actually asked for. */}
+            {isSearchActive && (
                 <div className="mt-2 animate-rise-in">
                     <h2 className="font-display text-lg font-semibold text-gray-900">
                         Results {!searching && `(${results.length})`}
@@ -127,7 +156,7 @@ function BrowsePage() {
                     {searching && <p className="mt-2 text-sm text-gray-500">Searching…</p>}
 
                     {!searching && results.length === 0 && (
-                        <p className="mt-2 text-sm text-gray-500">No results for "{query}".</p>
+                        <p className="mt-2 text-sm text-gray-500">No results for "{query}". Try a different spelling, or a scholar's name.</p>
                     )}
 
                     {!searching && episodeResults.length > 0 && (
@@ -159,100 +188,98 @@ function BrowsePage() {
                 </div>
             )}
 
-            <div className="mt-8">
+            {!isSearchActive && (
+                <>
+                    <div className="mt-8">
+                        <SectionHeading>Browse by category</SectionHeading>
 
-                <div className="flex items-center gap-2.5">
-                    <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
-                    <h2 className="font-display text-xl font-semibold text-gray-900">
-                        Browse by category
-                    </h2>
-                </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {topicsQuery.isLoading && Array.from({ length: 6 }).map((_, i) => <ChipSkeleton key={i} />)}
 
-                <div className="mt-4 flex flex-wrap gap-2">
-
-                    {topics.length === 0 && (
-                        <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                            <Compass size={18} style={{ color: 'var(--muted)' }} />
-                            <p className="text-sm text-gray-500">No categories yet.</p>
-                        </div>
-                    )}
-
-                    {topics.map((topic, i) => (
-                        <TopicChip
-                            key={topic.id ?? topic.name}
-                            name={topic.name}
-                            icon={ICONS[i % ICONS.length]}
-                            active={activeTopic === topic.name}
-                            index={i}
-                            onClick={() => selectTopic(topic.name)}
-                        />
-                    ))}
-
-                </div>
-
-            </div>
-
-            <div className="mt-8">
-
-                <div className="flex items-center gap-2.5">
-                    <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
-                    <h2 className="font-display text-xl font-semibold text-gray-900">
-                        Browse by scholar
-                    </h2>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-
-                    {scholars.length === 0 && (
-                        <div className="col-span-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                            <Users size={18} style={{ color: 'var(--muted)' }} />
-                            <p className="text-sm text-gray-500">No scholars yet.</p>
-                        </div>
-                    )}
-
-                    {scholars.map((s, i) => (
-                        <ScholarCard key={s.id} scholar={s} index={i} />
-                    ))}
-
-                </div>
-
-            </div>
-
-            <AnimatePresence>
-                {activeTopic && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                        className="mt-8 overflow-hidden">
-                        <div className="flex items-center gap-2.5">
-                            <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
-                            <h2 className="font-display text-xl font-semibold text-gray-900">{activeTopic}</h2>
-                        </div>
-
-                        <div className="mt-4 flex flex-col gap-2.5 pb-6">
-                            {topicLoading && <p className="text-sm text-gray-500">Loading…</p>}
-                            {!topicLoading && topicEpisodes.length === 0 && (
-                                <p className="text-sm text-gray-500">No episodes in this category yet.</p>
+                            {!topicsQuery.isLoading && topics.length === 0 && (
+                                <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                                    <Compass size={18} style={{ color: 'var(--muted)' }} />
+                                    <p className="text-sm text-gray-500">No categories yet.</p>
+                                </div>
                             )}
-                            {!topicLoading && visibleTopicEpisodes.map((ep, i) => (
-                                <ListCard
-                                    key={ep.id}
+
+                            {!topicsQuery.isLoading && topics.map((topic, i) => (
+                                <TopicChip
+                                    key={topic.id ?? topic.name}
+                                    name={topic.name}
+                                    icon={ICONS[i % ICONS.length]}
+                                    active={activeTopic === topic.name}
                                     index={i}
-                                    title={ep.title}
-                                    scholarName={ep.scholar?.name}
-                                    thumbnail={ep.thumbnail}
-                                    image={ep.title?.[0]}
-                                    episode={ep}
-                                    queue={topicEpisodes}
+                                    onClick={() => selectTopic(topic.name)}
                                 />
                             ))}
-                            {!topicLoading && <div ref={sentinelRef} className="h-1 w-1" aria-hidden="true" />}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+                        {/* Right below the chips that triggered it — not at the
+                            bottom of the page, past an entire scholar grid, where
+                            it used to render. */}
+                        <AnimatePresence>
+                            {activeTopic && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                                    className="overflow-hidden">
+                                    <div className="mt-5 flex items-center justify-between">
+                                        <p className="text-sm font-medium text-gray-500">
+                                            {topicLoading ? 'Loading…' : `${topicEpisodes.length} in "${activeTopic}"`}
+                                        </p>
+                                        <button
+                                            onClick={() => setActiveTopic(null)}
+                                            className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700">
+                                            <X size={12} /> Clear
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-3 flex flex-col gap-2.5 pb-2">
+                                        {!topicLoading && topicEpisodes.length === 0 && (
+                                            <p className="text-sm text-gray-500">No episodes in this category yet.</p>
+                                        )}
+                                        {!topicLoading && visibleTopicEpisodes.map((ep, i) => (
+                                            <ListCard
+                                                key={ep.id}
+                                                index={i}
+                                                title={ep.title}
+                                                scholarName={ep.scholar?.name}
+                                                thumbnail={ep.thumbnail}
+                                                image={ep.title?.[0]}
+                                                episode={ep}
+                                                queue={topicEpisodes}
+                                            />
+                                        ))}
+                                        {!topicLoading && <div ref={sentinelRef} className="h-1 w-1" aria-hidden="true" />}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    <div className="mt-8 pb-6">
+                        <SectionHeading>Browse by scholar</SectionHeading>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                            {scholarsQuery.isLoading && Array.from({ length: 8 }).map((_, i) => <ScholarCardSkeleton key={i} />)}
+
+                            {!scholarsQuery.isLoading && scholars.length === 0 && (
+                                <div className="col-span-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                                    <Users size={18} style={{ color: 'var(--muted)' }} />
+                                    <p className="text-sm text-gray-500">No scholars yet.</p>
+                                </div>
+                            )}
+
+                            {!scholarsQuery.isLoading && scholars.map((s, i) => (
+                                <ScholarCard key={s.id} scholar={s} index={i} />
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
 
         </div>
     )
