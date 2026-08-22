@@ -52,6 +52,13 @@ export const usePlayerStore = create((set, get) => ({
 
   pause: () => set({ isPlaying: false }),
 
+  // For the underlying <audio>/YouTube element telling us its state
+  // changed on its own (OS paused it on lock, then let it resume, etc.)
+  // — distinct from pause()/togglePlay(), which are the user pressing a
+  // button. Keeps the store truthful instead of lying about what's
+  // actually audible.
+  setPlaying: (playing) => set({ isPlaying: playing }),
+
   togglePlay: () => set((state) => {
     if (!state.isPlaying) useActivePlayerStore.setState({ active: 'episode' })
     return { isPlaying: !state.isPlaying }

@@ -38,7 +38,15 @@ function NativeAudioEngine() {
         if (audioRef.current) audioRef.current.currentTime = time
       },
       resume: () => {
-        if (audioRef.current?.paused) audioRef.current.play().catch(() => {})
+        if (!audioRef.current?.paused) return
+        // A rejection here (autoplay policy blocking a non-gesture
+        // resume, or the OS genuinely meant to keep it paused) doesn't
+        // fire a 'pause' event — it was already paused, nothing changed
+        // — so sync the store here directly instead of relying on
+        // handleNativePause below to catch it.
+        audioRef.current.play()
+          .then(() => usePlayerStore.getState().setPlaying(true))
+          .catch(() => usePlayerStore.getState().setPlaying(false))
       },
     })
   }, [])
@@ -91,12 +99,40 @@ function NativeAudioEngine() {
     if (audioRef.current) audioRef.current.playbackRate = playbackRate
   }, [playbackRate])
 
+  // Mobile OSes (iOS lock screen especially) can pause the underlying
+  // <audio> element on their own — not through togglePlay()/pause() — to
+  // suspend a backgrounded tab, briefly hand audio focus to something
+  // else, etc. Previously nothing listened for that, so the store (and
+  // the mini/full player UI) kept claiming "playing" while no sound was
+  // actually coming out, with no way to tell short of tapping play twice.
+  // Try one immediate resume; if that's rejected (the OS meant to pause
+  // it, or a programmatic resume needs a real tap it didn't get), reflect
+  // reality so the UI shows Play again — one tap then genuinely works,
+  // instead of a player that silently lies about its own state forever.
+  const handleNativePause = () => {
+    if (isYoutube) return
+    const { isPlaying: storeIsPlaying, setPlaying } = usePlayerStore.getState()
+    if (!storeIsPlaying) return
+    audioRef.current?.play()
+      .then(() => setPlaying(true))
+      .catch(() => setPlaying(false))
+  }
+
+  const handleNativePlay = () => {
+    if (isYoutube) return
+    const { isPlaying: storeIsPlaying, setPlaying } = usePlayerStore.getState()
+    if (!storeIsPlaying) setPlaying(true)
+  }
+
   return (
     <audio
       ref={audioRef}
+      preload="auto"
       onTimeUpdate={(e) => { if (!isYoutube) setCurrentTime(e.currentTarget.currentTime) }}
       onLoadedMetadata={(e) => { if (!isYoutube) setDuration(e.currentTarget.duration) }}
       onEnded={() => { if (!isYoutube) onEnded() }}
+      onPause={handleNativePause}
+      onPlay={handleNativePlay}
     />
   )
 }
