@@ -1,4 +1,4 @@
-// Applies speaker_images.json (repo root) as scholar profile pictures and
+// Applies data/speaker_images.json as scholar profile pictures and
 // episode/player artwork: sets scholars/{id}.image, then propagates that
 // same URL to episodes/{id}.thumbnail for every episode by that scholar
 // (episodes have no per-episode artwork of their own — the source site
@@ -21,7 +21,7 @@ import { getFirestore, collection, getDocs, writeBatch, doc } from 'firebase/fir
 import { canonicalSpeakerName } from './lib/speakerNames.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DATA_PATH = path.join(__dirname, '..', 'speaker_images.json')
+const DATA_PATH = path.join(__dirname, '..', 'data', 'speaker_images.json')
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,

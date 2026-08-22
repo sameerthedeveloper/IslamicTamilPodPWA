@@ -1,5 +1,5 @@
 // One-time import: writes the scraped tamildawah.com catalogue
-// (tamildawah_audio_v2.json at the repo root) into Firestore — creating
+// (data/tamildawah_audio_v2.json) into Firestore — creating
 // any missing scholars/series/topics along the way and linking each
 // episode to them, into the same 'episodes'/'scholars'/'series'/'topics'
 // collections the admin CMS and public app already read/write.
@@ -34,7 +34,7 @@ import {
 import { canonicalSpeakerName } from './lib/speakerNames.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DATA_PATH = path.join(__dirname, '..', 'tamildawah_audio_v2.json')
+const DATA_PATH = path.join(__dirname, '..', 'data', 'tamildawah_audio_v2.json')
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,

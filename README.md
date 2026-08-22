@@ -2,7 +2,7 @@
 
 A single-page React/Vite PWA for Tamil Islamic lectures and Quran recitation, with a built-in admin CMS. Public listeners get a podcast-app experience (browse, search, bookmark, resume playback, background/lock-screen audio); admins manage the catalogue at `/admin` without a separate backend — everything talks to Firebase directly.
 
-Live app: deployed via Vercel (see [DEPLOYMENT.md](./DEPLOYMENT.md)). Working with Claude Code on this repo? See [CLAUDE.md](./CLAUDE.md) for agent-oriented notes.
+Live app: deployed via Vercel (see [DEPLOYMENT.md](./docs/DEPLOYMENT.md)). Working with Claude Code on this repo? See [CLAUDE.md](./CLAUDE.md) for agent-oriented notes.
 
 ## Features
 
@@ -18,7 +18,7 @@ Live app: deployed via Vercel (see [DEPLOYMENT.md](./DEPLOYMENT.md)). Working wi
 - No visible sign-in required — every visitor gets a stable anonymous Firebase Auth session so bookmarks/history persist per-device; optional email/password sign-in exists (`/login`, `/register`) for syncing across devices
 
 **Admin CMS** (`/admin/*`)
-- Firebase email/password auth + a Firestore `role: "ADMIN"` check (see [DEPLOYMENT.md §4](./DEPLOYMENT.md#4-firebase-project-setup))
+- Firebase email/password auth + a Firestore `role: "ADMIN"` check (see [DEPLOYMENT.md §4](./docs/DEPLOYMENT.md#4-firebase-project-setup))
 - Full CRUD on Episodes, Scholars, Series, Playlists, Rights, Users, Featured, Settings; create+list for Topics
 - Audio upload to Firebase Storage, with a rights/status state machine on episodes (`DRAFT → PROCESSING → READY → PUBLISHED/UNPUBLISHED`, blocked if the scholar's rights are `EXPIRED`/`REVOKED`)
 - Bulk JSON import into any collection (Settings page)
@@ -37,13 +37,13 @@ Live app: deployed via Vercel (see [DEPLOYMENT.md](./DEPLOYMENT.md)). Working wi
 ## Getting started
 
 ```bash
-cp .env.example .env    # fill in the VITE_FIREBASE_* values — see DEPLOYMENT.md §4
+cp .env.example .env    # fill in the VITE_FIREBASE_* values — see docs/DEPLOYMENT.md §4
 npm install
 npm run dev              # http://localhost:5173
 ```
 
 - Public app: `http://localhost:5173/`
-- Admin CMS: `http://localhost:5173/admin/login` (needs an ADMIN-role Firestore user — see [DEPLOYMENT.md §4](./DEPLOYMENT.md#4-firebase-project-setup))
+- Admin CMS: `http://localhost:5173/admin/login` (needs an ADMIN-role Firestore user — see [DEPLOYMENT.md §4](./docs/DEPLOYMENT.md#4-firebase-project-setup))
 
 PWA features (install prompt, service worker, offline) only activate on a production build — `npm run dev` doesn't register the service worker:
 
@@ -62,8 +62,8 @@ No database, Docker, or worker process to run locally — Firestore/Storage/Auth
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | ESLint over the whole repo |
 | `npm run seed:abdul-basith` | One-off script seeding a fixed episode list for one scholar (`scripts/seedAbdulBasithEpisodes.js`) |
-| `npm run seed:tamildawah` | Upserts `tamildawah_audio_v2.json` into Firestore — creates/links scholars, series, topics, and episodes; safe to re-run after editing the JSON (`scripts/seedTamilDawahEpisodes.js`) |
-| `npm run seed:speaker-images` | Applies `speaker_images.json` as scholar portraits and propagates them to episode/player artwork (`scripts/applySpeakerImages.js`) |
+| `npm run seed:tamildawah` | Upserts `data/tamildawah_audio_v2.json` into Firestore — creates/links scholars, series, topics, and episodes; safe to re-run after editing the JSON (`scripts/seedTamilDawahEpisodes.js`) |
+| `npm run seed:speaker-images` | Applies `data/speaker_images.json` as scholar portraits and propagates them to episode/player artwork (`scripts/applySpeakerImages.js`) |
 | `npm run wipe:content` | **Destructive.** Deletes every doc in `episodes`/`scholars`/`series`/`topics`. Requires `CONFIRM_WIPE=yes-delete-everything` (`scripts/wipeContentData.js`) |
 
 All seed/wipe scripts need Firebase env vars (same `.env` as the app) plus `ADMIN_EMAIL`/`ADMIN_PASSWORD` for an existing ADMIN-role account, e.g.:
@@ -77,6 +77,9 @@ ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=••••• npm run seed:tamildaw
 One Vite/React SPA at the repo root — everything talks directly to Firebase, there is no backend server.
 
 ```
+data/                    Source JSON the seed scripts import (tamildawah_audio_v2.json, speaker_images.json)
+docs/                     DEPLOYMENT.md — full ops guide (Vercel, Firebase setup, rollback, troubleshooting)
+scripts/                  Node seed/maintenance scripts (see Scripts above) — run against Firebase directly, not part of the app build
 src/
 ├── pages/              Public app screens (Home, Browse, Library, Scholars, Quran, Episode detail, Settings, Login/Register)
 ├── components/          Shared UI: nav, top bar, sidebar, both audio engines & their player sheets, error boundary
@@ -109,11 +112,11 @@ src/
 
 **Data fetching**: `src/api/client.js` (public reads) and `src/admin/api/client.js` (admin CRUD) both go straight to Firestore — no REST layer. Public pages wrap these in TanStack Query (`useQuery`) so navigating between tabs reuses cached data instead of refetching; writes that happen outside a query (bookmark toggles, playback-progress saves) call `queryClient.invalidateQueries()` so the cache doesn't go stale.
 
-**Data model**: see [DEPLOYMENT.md §5](./DEPLOYMENT.md#5-data-model-firestore-collections) for the full Firestore collection list, and `firestore.rules` for what's public-read vs admin-only.
+**Data model**: see [DEPLOYMENT.md §5](./docs/DEPLOYMENT.md#5-data-model-firestore-collections) for the full Firestore collection list, and `firestore.rules` for what's public-read vs admin-only.
 
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full guide: Vercel setup, Firebase project setup (Auth/Firestore/Storage/rules/admin roles), PWA notes, rollback, and a troubleshooting table.
+See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for the full guide: Vercel setup, Firebase project setup (Auth/Firestore/Storage/rules/admin roles), PWA notes, rollback, and a troubleshooting table.
 
 ## Known gaps
 
