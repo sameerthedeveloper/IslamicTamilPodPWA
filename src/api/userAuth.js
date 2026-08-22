@@ -2,11 +2,16 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   linkWithCredential,
+  linkWithPopup,
+  signInWithPopup,
   EmailAuthProvider,
+  GoogleAuthProvider,
   updateProfile,
 } from 'firebase/auth'
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+
+const googleProvider = new GoogleAuthProvider()
 
 export async function registerUser(name, email, password) {
   const current = auth.currentUser
@@ -49,6 +54,50 @@ export async function loginUser(email, password) {
   return user
 }
 
+// One flow for both login and register — Google OAuth already tells us
+// whether the account is new, so there's no separate "create" step the
+// way email/password needs.
+export async function loginWithGoogle() {
+  const current = auth.currentUser
+  let fbUser
+
+  // Same anonymous-session upgrade as registerUser — carries over any
+  // continue-listening/bookmark history already saved under this device's
+  // anonymous uid instead of starting a fresh, empty account.
+  if (current?.isAnonymous) {
+    try {
+      const result = await linkWithPopup(current, googleProvider)
+      fbUser = result.user
+    } catch (err) {
+      if (err.code === 'auth/credential-already-in-use' || err.code === 'auth/email-already-in-use') {
+        const result = await signInWithPopup(auth, googleProvider)
+        fbUser = result.user
+      } else {
+        throw err
+      }
+    }
+  } else {
+    const result = await signInWithPopup(auth, googleProvider)
+    fbUser = result.user
+  }
+
+  // Only set role on first sign-in — merge:true still overwrites fields
+  // it's given, so blindly writing role: 'USER' every time would demote
+  // an existing ADMIN doc if that admin's email ever signs in here too.
+  const userRef = doc(db, 'users', fbUser.uid)
+  const existing = await getDoc(userRef)
+  await setDoc(
+    userRef,
+    {
+      name: fbUser.displayName,
+      email: fbUser.email,
+      ...(existing.exists() ? {} : { role: 'USER', createdAt: serverTimestamp() }),
+    },
+    { merge: true },
+  )
+  return fbUser
+}
+
 export function authErrorMessage(err) {
   switch (err?.code) {
     case 'auth/invalid-credential':
@@ -63,6 +112,11 @@ export function authErrorMessage(err) {
       return 'Enter a valid email address.'
     case 'auth/too-many-requests':
       return 'Too many attempts. Try again later.'
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return ''
+    case 'auth/popup-blocked':
+      return 'Your browser blocked the sign-in popup. Allow popups for this site and try again.'
     default:
       return err?.message || 'Something went wrong. Try again.'
   }

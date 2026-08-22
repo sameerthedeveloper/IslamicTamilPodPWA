@@ -78,7 +78,7 @@ The app is a full installable PWA (both the public site and `/admin`):
 
 ## 4. Firebase project setup
 
-1. **Auth**: Firebase Console → Authentication → enable **Email/Password** sign-in. Create your admin user(s) there (Authentication → Users → Add user).
+1. **Auth**: Firebase Console → Authentication → enable **Email/Password** sign-in (used by admin login and the public app's email/password option). Create your admin user(s) there (Authentication → Users → Add user). Also enable **Google** sign-in there if you want the public app's "Continue with Google" button (`/login`, `/register`) to work — it does nothing but error until that provider is turned on.
 2. **Firestore**: Firebase Console → Firestore Database → create the database (production mode).
 3. **Storage**: Firebase Console → Storage → create the default bucket.
 4. **Security rules**: paste `firestore.rules` into Firestore → Rules, and `storage.rules` into Storage → Rules (Publish both). Or, from a machine that can run `firebase login` (this sandbox's outbound proxy blocks Firebase's CLI auth endpoint, so it has to be done from your own machine):

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
-import { registerUser, authErrorMessage } from '../api/userAuth'
+import { registerUser, loginWithGoogle, authErrorMessage } from '../api/userAuth'
 import { useUserStore } from '../store/userStore'
 import AuthLayout from '../components/AuthLayout'
+import GoogleIcon from '../components/GoogleIcon'
 
 function RegisterPage() {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   if (authStatus === 'ready' && user && !user.isAnonymous) {
     return <Navigate to="/" replace />
@@ -31,6 +33,19 @@ function RegisterPage() {
       setError(authErrorMessage(err))
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    setError('')
+    setGoogleLoading(true)
+    try {
+      await loginWithGoogle()
+      navigate('/')
+    } catch (err) {
+      setError(authErrorMessage(err))
+    } finally {
+      setGoogleLoading(false)
     }
   }
 
@@ -53,6 +68,22 @@ function RegisterPage() {
         <p className="mt-1 mb-6 text-sm text-gray-500">
           Save bookmarks and pick up where you left off.
         </p>
+
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={googleLoading}
+          className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-[0.98] disabled:opacity-50"
+        >
+          <GoogleIcon size={17} />
+          {googleLoading ? 'Signing in…' : 'Continue with Google'}
+        </button>
+
+        <div className="mb-5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs text-gray-400">or</span>
+          <span className="h-px flex-1 bg-gray-200" />
+        </div>
 
         <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-gray-500">
           Name
