@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { CloudOff, Sparkles, Mic, BookOpen, GraduationCap, Users } from 'lucide-react'
 import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
@@ -46,66 +46,37 @@ function historyToEpisode(h) {
 
 function HomePage() {
     const navigate = useNavigate()
-    const [episodes, setEpisodes] = useState([])
-    const [continueListening, setContinueListening] = useState([])
-    const [topics, setTopics] = useState([])
-    const [scholars, setScholars] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [historyLoading, setHistoryLoading] = useState(true)
-    const [historyError, setHistoryError] = useState(false)
-    const [error, setError] = useState(false)
     const authStatus = useUserStore((s) => s.status)
+    const uid = useUserStore((s) => s.user?.uid)
 
-    useEffect(() => {
-        let cancelled = false
-        getEpisodes()
-            .then((data) => {
-                if (!cancelled) setEpisodes(data?.data ?? [])
-            })
-            .catch(() => {
-                if (!cancelled) setError(true)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-        getTopics()
-            .then((data) => {
-                if (!cancelled) setTopics(Array.isArray(data) ? data : (data?.data ?? []))
-            })
-            .catch(() => {
-                if (!cancelled) setTopics([])
-            })
-        getScholars()
-            .then((data) => {
-                if (!cancelled) setScholars(data)
-            })
-            .catch(() => {
-                if (!cancelled) setScholars([])
-            })
-        return () => { cancelled = true }
-    }, [])
+    // Cached by TanStack Query — switching tabs unmounts this page (React
+    // Router only renders the active route), so without a cache outliving
+    // the component this whole screen refetched from Firestore on every
+    // single visit. Now a remounted Home reads the cached result instantly.
+    const episodesQuery = useQuery({ queryKey: ['episodes'], queryFn: () => getEpisodes() })
+    const topicsQuery = useQuery({
+        queryKey: ['topics'],
+        queryFn: async () => {
+            const data = await getTopics()
+            return Array.isArray(data) ? data : (data?.data ?? [])
+        },
+    })
+    const scholarsQuery = useQuery({ queryKey: ['scholars'], queryFn: getScholars })
+    const historyQuery = useQuery({
+        queryKey: ['history', uid],
+        queryFn: getHistory,
+        enabled: authStatus === 'ready',
+    })
 
-    useEffect(() => {
-        if (authStatus !== 'ready') return
-        let cancelled = false
-        setHistoryLoading(true)
-        setHistoryError(false)
-        getHistory()
-            .then((rows) => {
-                if (!cancelled) setContinueListening(rows.map(historyToEpisode))
-            })
-            .catch((err) => {
-                // Previously uncaught — a permission-denied or network error
-                // rendered identically to "genuinely no history yet", with
-                // no way to tell the two apart.
-                console.error('[home] failed to load continue-listening history:', err.code || err.message, err)
-                if (!cancelled) setHistoryError(true)
-            })
-            .finally(() => {
-                if (!cancelled) setHistoryLoading(false)
-            })
-        return () => { cancelled = true }
-    }, [authStatus])
+    const episodes = episodesQuery.data?.data ?? []
+    const topics = topicsQuery.data ?? []
+    const scholars = scholarsQuery.data ?? []
+    const continueListening = (historyQuery.data ?? []).map(historyToEpisode)
+
+    const loading = episodesQuery.isLoading
+    const error = episodesQuery.isError
+    const historyLoading = historyQuery.isLoading
+    const historyError = historyQuery.isError
 
     const discoverEpisodes = [...episodes].reverse()
     const { visibleCount, sentinelRef } = useIncrementalReveal(discoverEpisodes.length, 16)
@@ -133,7 +104,9 @@ function HomePage() {
             </p>
 
             {topics.length > 0 && (
-                <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <div
+                    className="mt-4 flex gap-2 overflow-x-auto overflow-y-hidden pb-1 scrollbar-hide"
+                    style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}>
                     {topics.map((topic, i) => (
                         <TopicChip
                             key={topic.id ?? topic.name}

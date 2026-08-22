@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { getBookmarks, addBookmark, removeBookmark } from '../api/client'
+import { queryClient } from '../queryClient'
 
 export const useBookmarkStore = create((set, get) => ({
   ids: new Set(),
@@ -24,6 +25,11 @@ export const useBookmarkStore = create((set, get) => ({
     try {
       if (bookmarked) await removeBookmark(id)
       else await addBookmark(episode)
+      // LibraryPage's ['bookmarks', uid] query cache doesn't know a
+      // bookmark changed here (this store, not that page, owns the write)
+      // — invalidate it so Library shows the change next time it's
+      // visited instead of the stale pre-toggle list.
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
     } catch {
       set((state) => {
         const next = new Set(state.ids)

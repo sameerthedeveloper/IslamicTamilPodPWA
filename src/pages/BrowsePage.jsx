@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Search, Mic, BookOpen, GraduationCap, Users, Compass, X } from 'lucide-react'
 import { getTopics, getEpisodesByTopic, getScholars, search as searchApi } from '../api/client'
 import TitleCard from '../components/Card/TitleCard'
 import ListCard from '../components/Card/ListCard'
-import TopicCard from '../components/Card/TopicCard'
+import TopicChip from '../components/Card/TopicChip'
 import ScholarCard from '../components/Card/ScholarCard'
 import ScholarListRow from '../components/Card/ScholarListRow'
 import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
@@ -31,23 +32,33 @@ function SeriesRow({ item }) {
 }
 
 function BrowsePage() {
-    const [topics, setTopics] = useState([])
-    const [scholars, setScholars] = useState([])
     const [query, setQuery] = useState('')
     const [results, setResults] = useState(null)
     const [searching, setSearching] = useState(false)
     const [activeTopic, setActiveTopic] = useState(null)
-    const [topicEpisodes, setTopicEpisodes] = useState([])
-    const [topicLoading, setTopicLoading] = useState(false)
 
-    useEffect(() => {
-        getTopics()
-            .then((data) => setTopics(Array.isArray(data) ? data : (data?.data ?? [])))
-            .catch(() => setTopics([]))
-        getScholars()
-            .then(setScholars)
-            .catch(() => setScholars([]))
-    }, [])
+    // Same query keys as HomePage — switching Home <-> Discover reuses the
+    // exact same cached topics/scholars instead of refetching.
+    const topicsQuery = useQuery({
+        queryKey: ['topics'],
+        queryFn: async () => {
+            const data = await getTopics()
+            return Array.isArray(data) ? data : (data?.data ?? [])
+        },
+    })
+    const scholarsQuery = useQuery({ queryKey: ['scholars'], queryFn: getScholars })
+    const topics = topicsQuery.data ?? []
+    const scholars = scholarsQuery.data ?? []
+
+    // Cached per topic name — reselecting a topic already viewed this
+    // session (or seen elsewhere) shows it instantly instead of refetching.
+    const topicEpisodesQuery = useQuery({
+        queryKey: ['topicEpisodes', activeTopic],
+        queryFn: () => getEpisodesByTopic(activeTopic),
+        enabled: !!activeTopic,
+    })
+    const topicEpisodes = topicEpisodesQuery.data ?? []
+    const topicLoading = topicEpisodesQuery.isLoading
 
     useEffect(() => {
         if (!query.trim()) {
@@ -72,17 +83,7 @@ function BrowsePage() {
     }, [query])
 
     const selectTopic = (name) => {
-        if (activeTopic === name) {
-            setActiveTopic(null)
-            setTopicEpisodes([])
-            return
-        }
-        setActiveTopic(name)
-        setTopicLoading(true)
-        getEpisodesByTopic(name)
-            .then(setTopicEpisodes)
-            .catch(() => setTopicEpisodes([]))
-            .finally(() => setTopicLoading(false))
+        setActiveTopic((current) => (current === name ? null : name))
     }
 
     const episodeResults = results?.filter((r) => r.type === 'episode') ?? []
@@ -130,7 +131,7 @@ function BrowsePage() {
                     )}
 
                     {!searching && episodeResults.length > 0 && (
-                        <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+                        <div className="mt-4 flex flex-wrap gap-3">
                             {episodeResults.map((ep, i) => (
                                 <TitleCard
                                     key={ep.id}
@@ -167,17 +168,17 @@ function BrowsePage() {
                     </h2>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="mt-4 flex flex-wrap gap-2">
 
                     {topics.length === 0 && (
-                        <div className="col-span-2 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                        <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
                             <Compass size={18} style={{ color: 'var(--muted)' }} />
                             <p className="text-sm text-gray-500">No categories yet.</p>
                         </div>
                     )}
 
                     {topics.map((topic, i) => (
-                        <TopicCard
+                        <TopicChip
                             key={topic.id ?? topic.name}
                             name={topic.name}
                             icon={ICONS[i % ICONS.length]}
@@ -200,17 +201,17 @@ function BrowsePage() {
                     </h2>
                 </div>
 
-                <div className="mt-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
 
                     {scholars.length === 0 && (
-                        <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                        <div className="col-span-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
                             <Users size={18} style={{ color: 'var(--muted)' }} />
                             <p className="text-sm text-gray-500">No scholars yet.</p>
                         </div>
                     )}
 
                     {scholars.map((s, i) => (
-                        <ScholarCard key={s.id} scholar={s} index={i} shrink />
+                        <ScholarCard key={s.id} scholar={s} index={i} />
                     ))}
 
                 </div>

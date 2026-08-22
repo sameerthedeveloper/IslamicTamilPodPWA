@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CloudOff, Sparkles } from 'lucide-react'
 import { getScholars, getScholarById, getEpisodes, getEpisodesByScholarId } from '../api/client'
 import ListCard from '../components/Card/ListCard'
@@ -27,29 +27,20 @@ function ScholarPortrait({ scholar }) {
 
 function ScholarDetail({ scholarId }) {
     const navigate = useNavigate()
-    const [scholar, setScholar] = useState(null)
-    const [episodes, setEpisodes] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(false)
 
-    useEffect(() => {
-        let cancelled = false
-        setLoading(true)
-        setError(false)
-        Promise.all([getScholarById(scholarId), getEpisodesByScholarId(scholarId)])
-            .then(([s, eps]) => {
-                if (cancelled) return
-                setScholar(s)
-                setEpisodes(eps)
-            })
-            .catch(() => {
-                if (!cancelled) setError(true)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-        return () => { cancelled = true }
-    }, [scholarId])
+    const scholarQuery = useQuery({
+        queryKey: ['scholar', scholarId],
+        queryFn: () => getScholarById(scholarId),
+    })
+    const episodesQuery = useQuery({
+        queryKey: ['episodesByScholar', scholarId],
+        queryFn: () => getEpisodesByScholarId(scholarId),
+    })
+
+    const scholar = scholarQuery.data
+    const episodes = episodesQuery.data ?? []
+    const loading = scholarQuery.isLoading || episodesQuery.isLoading
+    const error = scholarQuery.isError || episodesQuery.isError
 
     const { visibleCount, sentinelRef } = useIncrementalReveal(episodes.length, 20)
     const visibleEpisodes = episodes.slice(0, visibleCount)
@@ -113,33 +104,21 @@ function ScholarDetail({ scholarId }) {
 
 function ScholarsPage() {
     const { scholarId } = useParams()
-    const [scholars, setScholars] = useState([])
-    const [episodeCounts, setEpisodeCounts] = useState({})
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(false)
 
-    useEffect(() => {
-        if (scholarId) return
-        let cancelled = false
-        Promise.all([getScholars(), getEpisodes()])
-            .then(([scholarList, episodesRes]) => {
-                if (cancelled) return
-                setScholars(scholarList)
-                const counts = {}
-                for (const ep of episodesRes?.data ?? []) {
-                    if (!ep.scholarId) continue
-                    counts[ep.scholarId] = (counts[ep.scholarId] ?? 0) + 1
-                }
-                setEpisodeCounts(counts)
-            })
-            .catch(() => {
-                if (!cancelled) setError(true)
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-        return () => { cancelled = true }
-    }, [scholarId])
+    // Same ['scholars']/['episodes'] cache keys as Home/Browse — arriving
+    // here from either already has this data loaded, no refetch.
+    const scholarsQuery = useQuery({ queryKey: ['scholars'], queryFn: getScholars, enabled: !scholarId })
+    const episodesQuery = useQuery({ queryKey: ['episodes'], queryFn: () => getEpisodes(), enabled: !scholarId })
+
+    const scholars = scholarsQuery.data ?? []
+    const loading = scholarsQuery.isLoading || episodesQuery.isLoading
+    const error = scholarsQuery.isError || episodesQuery.isError
+
+    const episodeCounts = {}
+    for (const ep of episodesQuery.data?.data ?? []) {
+        if (!ep.scholarId) continue
+        episodeCounts[ep.scholarId] = (episodeCounts[ep.scholarId] ?? 0) + 1
+    }
 
     if (scholarId) return <ScholarDetail scholarId={scholarId} />
 

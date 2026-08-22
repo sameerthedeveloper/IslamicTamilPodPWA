@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { BookX, Trash2, Play, Search, X, History } from 'lucide-react'
 import { getBookmarks, getHistory, removeBookmark, clearHistory } from '../api/client'
 import { usePlayerStore } from '../store/playerStore'
@@ -107,47 +108,53 @@ function matches(item, needle) {
 }
 
 function LibraryPage() {
-  const [bookmarks, setBookmarks] = useState([])
-  const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [clearing, setClearing] = useState(false)
   const authStatus = useUserStore((s) => s.status)
+  const uid = useUserStore((s) => s.user?.uid)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    if (authStatus !== 'ready') return
-    setLoading(true)
-    Promise.all([
-      getBookmarks().catch((err) => {
-        console.error('[library] failed to load bookmarks:', err.code || err.message, err)
-        return []
-      }),
-      getHistory().catch((err) => {
-        console.error('[library] failed to load history:', err.code || err.message, err)
-        return []
-      }),
-    ])
-      .then(([bm, hist]) => {
-        setBookmarks(bm)
-        setHistory(hist)
-      })
-      .finally(() => setLoading(false))
-  }, [authStatus])
+  // Same ['history', uid] key HomePage's Continue Listening uses, so
+  // visiting either reuses the other's cached data instead of refetching.
+  const bookmarksQuery = useQuery({
+    queryKey: ['bookmarks', uid],
+    queryFn: () => getBookmarks().catch((err) => {
+      console.error('[library] failed to load bookmarks:', err.code || err.message, err)
+      return []
+    }),
+    enabled: authStatus === 'ready',
+  })
+  const historyQuery = useQuery({
+    queryKey: ['history', uid],
+    queryFn: () => getHistory().catch((err) => {
+      console.error('[library] failed to load history:', err.code || err.message, err)
+      return []
+    }),
+    enabled: authStatus === 'ready',
+  })
+
+  const bookmarks = useMemo(() => bookmarksQuery.data ?? [], [bookmarksQuery.data])
+  const history = useMemo(() => historyQuery.data ?? [], [historyQuery.data])
+  const loading = bookmarksQuery.isLoading || historyQuery.isLoading
 
   const handleRemove = async (item) => {
-    setBookmarks((prev) => prev.filter((b) => b.id !== item.id))
-    await removeBookmark(item.episodeId ?? item.id).catch(() => {})
+    queryClient.setQueryData(['bookmarks', uid], (prev) => (prev ?? []).filter((b) => b.id !== item.id))
+    try {
+      await removeBookmark(item.episodeId ?? item.id)
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ['bookmarks', uid] })
+    }
   }
 
   const handleClearHistory = async () => {
     if (!confirm('Clear your entire listening history? This can\'t be undone.')) return
     setClearing(true)
-    const prev = history
-    setHistory([])
+    const prev = queryClient.getQueryData(['history', uid])
+    queryClient.setQueryData(['history', uid], [])
     try {
       await clearHistory()
     } catch {
-      setHistory(prev)
+      queryClient.setQueryData(['history', uid], prev)
     } finally {
       setClearing(false)
     }

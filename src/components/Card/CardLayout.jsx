@@ -9,7 +9,9 @@ function CardLayout({ children, title }) {
         </h2>
       </div>
 
-      <div className="mt-4 flex gap-4 overflow-x-auto scrollbar-hide pb-2">
+      <div
+        className="mt-4 flex gap-4 overflow-x-auto overflow-y-hidden scrollbar-hide pb-2"
+        style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}>
 
         {children}
 

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Play, Pause, CloudOff, Share2, MapPin, Moon, Star } from 'lucide-react'
 import { getEpisode } from '../api/client'
@@ -38,9 +39,6 @@ function Artwork({ thumbnail, title }) {
 function EpisodeDetailPage() {
   const { episodeId } = useParams()
   const navigate = useNavigate()
-  const [episode, setEpisode] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const play = usePlayerStore((s) => s.play)
@@ -48,22 +46,15 @@ function EpisodeDetailPage() {
   const currentEpisode = usePlayerStore((s) => s.currentEpisode)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError(false)
-    getEpisode(episodeId)
-      .then((data) => {
-        if (!cancelled) setEpisode(data)
-      })
-      .catch(() => {
-        if (!cancelled) setError(true)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [episodeId])
+  // Cached by id — coming back to an episode you've already opened (e.g.
+  // via back/forward, or replaying from Library) shows it instantly.
+  const episodeQuery = useQuery({
+    queryKey: ['episode', episodeId],
+    queryFn: () => getEpisode(episodeId),
+  })
+  const episode = episodeQuery.data
+  const loading = episodeQuery.isLoading
+  const error = episodeQuery.isError
 
   const isCurrent = currentEpisode?.id === episode?.id
   const handlePlay = () => {
