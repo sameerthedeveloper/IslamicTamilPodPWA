@@ -99,8 +99,8 @@ The app is a full installable PWA (both the public site and `/admin`):
 | `rights` | Admin CMS | Admin-only, drives the "blocked" state on Episodes when EXPIRED/REVOKED |
 | `featured` | Admin CMS | Ordered by `position` |
 | `settings` | Admin CMS (singleton doc `settings/app`) | |
-| `users/{uid}` | Manual (Firebase Console) for admins; self-created (non-admin) on first sign-in elsewhere if you add that flow | `role` field gates `/admin` |
-| `users/{uid}/bookmarks`, `users/{uid}/history` | Not yet written by any UI | Read by `src/api/client.js`'s `getBookmarks`/`getHistory`; the public app has no sign-in flow yet, so these stay empty until one's added |
+| `users/{uid}` | Manual (Firebase Console) for admins; auto-created (anonymous) by `src/firebase.js` for every visitor | `role` field gates `/admin` |
+| `users/{uid}/bookmarks`, `users/{uid}/history` | Public app — `BookmarkButton` and `AudioEngine.jsx`'s `HistorySync` | Every visitor is silently signed in anonymously on first load (`src/firebase.js`), so these are written per-device even without the optional `/login`/`/register` account flow |
 
 Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired up end-to-end — see Known gaps) under `images/**`.
 
@@ -129,7 +129,7 @@ Audio files live in Storage under `audio/{episodeId}/...`; images (not yet wired
 
 ## Known gaps (not hidden, just not built yet)
 
-- The public app (`/`, `/library`, `/browse`, `/quran`) has no sign-in UI — `getBookmarks`/`getHistory` only return data once *some* Firebase Auth session exists, which currently nothing in the public app creates.
 - Image upload (`src/admin/components/ImageUpload.jsx`) previews locally but isn't wired to actually upload to Storage yet — only audio files (`src/admin/api/client.js`'s `audioApi.upload`) are.
 - Topics only supports create + list from the CMS — no edit/delete UI or backend call for it yet.
-- The old Node/Prisma API lives on the `backend` branch, not `main` — moved there since nothing calls it anymore. `git checkout backend` if you need to reference or resurrect it.
+- Series has no public detail page — search results for a series aren't clickable yet, only scholar results are.
+- The old Node/Prisma API lives on the `backend` branch, not `main` — moved there since nothing calls it anymore. `git checkout backend` if you need to reference or resurrect it. (The `backend/`/`cms/`/`frontend/` directories that used to sit untracked on disk locally have been removed — nothing was lost, they were never committed and the real backend source is on that branch.)
