@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, Mic, BookOpen, GraduationCap, Users, Compass, X } from 'lucide-react'
-import { getTopics, getEpisodesByTopic, getScholars, search as searchApi } from '../api/client'
+import { getEpisodesByTopic, getScholars, search as searchApi } from '../api/client'
 import TitleCard from '../components/Card/TitleCard'
 import ListCard from '../components/Card/ListCard'
 import TopicChip from '../components/Card/TopicChip'
 import ScholarCard from '../components/Card/ScholarCard'
 import ScholarListRow from '../components/Card/ScholarListRow'
-import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const ICONS = [Mic, BookOpen, GraduationCap, Users]
@@ -40,16 +40,50 @@ function SeriesRow({ item }) {
     )
 }
 
-function ChipSkeleton() {
-    return <div className="skeleton h-[38px] w-28 rounded-full" />
-}
+// A category match found by search — the chip (linking to the full
+// TopicDetailPage) plus its episodes shown right here, since the person
+// already typed the exact thing they were looking for.
+function TopicResult({ topic, index }) {
+    const navigate = useNavigate()
+    const episodesQuery = useQuery({
+        queryKey: ['topicEpisodes', topic.name],
+        queryFn: () => getEpisodesByTopic(topic.name),
+    })
+    const episodes = episodesQuery.data ?? []
 
-function ScholarCardSkeleton() {
     return (
-        <div className="flex h-50 flex-col rounded-2xl border border-gray-200 bg-white p-2">
-            <div className="skeleton flex-1 rounded-xl" />
-            <div className="skeleton mt-2 h-3.5 w-3/4 rounded-full" />
-            <div className="skeleton mt-1.5 h-3 w-1/2 rounded-full" />
+        <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <TopicChip
+                name={topic.name}
+                icon={ICONS[index % ICONS.length]}
+                onClick={() => navigate(`/topics/${topic.id}`)}
+            />
+
+            <div className="mt-3 flex flex-col gap-2">
+                {episodesQuery.isLoading && <p className="text-sm text-gray-500">Loading…</p>}
+                {!episodesQuery.isLoading && episodes.length === 0 && (
+                    <p className="text-sm text-gray-500">No lectures in this category yet.</p>
+                )}
+                {!episodesQuery.isLoading && episodes.slice(0, 5).map((ep, i) => (
+                    <ListCard
+                        key={ep.id}
+                        index={i}
+                        title={ep.title}
+                        scholarName={ep.scholar?.name}
+                        thumbnail={ep.thumbnail}
+                        image={ep.title?.[0]}
+                        episode={ep}
+                        queue={episodes}
+                    />
+                ))}
+                {episodes.length > 5 && (
+                    <button
+                        onClick={() => navigate(`/topics/${topic.id}`)}
+                        className="mt-1 self-start text-sm font-medium" style={{ color: 'var(--accent)' }}>
+                        See all {episodes.length} →
+                    </button>
+                )}
+            </div>
         </div>
     )
 }
@@ -58,32 +92,13 @@ function BrowsePage() {
     const [query, setQuery] = useState('')
     const [results, setResults] = useState(null)
     const [searching, setSearching] = useState(false)
-    const [activeTopic, setActiveTopic] = useState(null)
 
     const isSearchActive = results !== null
 
-    // Same query keys as HomePage — switching Home <-> Discover reuses the
-    // exact same cached topics/scholars instead of refetching.
-    const topicsQuery = useQuery({
-        queryKey: ['topics'],
-        queryFn: async () => {
-            const data = await getTopics()
-            return Array.isArray(data) ? data : (data?.data ?? [])
-        },
-    })
+    // Same query key as HomePage — switching Home <-> Discover reuses the
+    // exact same cached scholars instead of refetching.
     const scholarsQuery = useQuery({ queryKey: ['scholars'], queryFn: getScholars })
-    const topics = topicsQuery.data ?? []
     const scholars = scholarsQuery.data ?? []
-
-    // Cached per topic name — reselecting a topic already viewed this
-    // session (or seen elsewhere) shows it instantly instead of refetching.
-    const topicEpisodesQuery = useQuery({
-        queryKey: ['topicEpisodes', activeTopic],
-        queryFn: () => getEpisodesByTopic(activeTopic),
-        enabled: !!activeTopic,
-    })
-    const topicEpisodes = topicEpisodesQuery.data ?? []
-    const topicLoading = topicEpisodesQuery.isLoading
 
     useEffect(() => {
         if (!query.trim()) {
@@ -107,15 +122,9 @@ function BrowsePage() {
         return () => { cancelled = true; clearTimeout(timeout) }
     }, [query])
 
-    const selectTopic = (name) => {
-        setActiveTopic((current) => (current === name ? null : name))
-    }
-
     const episodeResults = results?.filter((r) => r.type === 'episode') ?? []
-    const otherResults = results?.filter((r) => r.type !== 'episode') ?? []
-
-    const { visibleCount, sentinelRef } = useIncrementalReveal(topicEpisodes.length, 20)
-    const visibleTopicEpisodes = topicEpisodes.slice(0, visibleCount)
+    const topicResults = results?.filter((r) => r.type === 'topic') ?? []
+    const otherResults = results?.filter((r) => r.type !== 'episode' && r.type !== 'topic') ?? []
 
     return (
         <div className="px-5 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-10">
@@ -125,7 +134,7 @@ function BrowsePage() {
             </h1>
 
             <p className="mt-2 text-gray-500">
-                Explore Islamic content by category.
+                Search lectures, scholars, and categories.
             </p>
 
             <div className="my-4 flex items-center gap-3 rounded-full border border-gray-200 bg-white px-4 py-3 shadow-sm transition-shadow focus-within:shadow-md">
@@ -135,7 +144,7 @@ function BrowsePage() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     className="w-full bg-transparent outline-none ring-0 focus:outline-none focus:ring-0"
-                    placeholder="Search lectures, scholars, topics…" />
+                    placeholder="Search lectures, scholars, categories…" />
                 {query && (
                     <button onClick={() => setQuery('')} aria-label="Clear search" className="shrink-0 text-gray-400 hover:text-gray-600">
                         <X size={16} />
@@ -144,9 +153,9 @@ function BrowsePage() {
             </div>
 
             {/* While a search is active, that's the only thing worth looking
-                at — showing the full category/scholar browse below it too
-                is just noise competing for attention with what the person
-                actually asked for. */}
+                at — showing the full scholar browse below it too is just
+                noise competing for attention with what the person actually
+                asked for. */}
             {isSearchActive && (
                 <div className="mt-2 animate-rise-in">
                     <h2 className="font-display text-lg font-semibold text-gray-900">
@@ -156,7 +165,18 @@ function BrowsePage() {
                     {searching && <p className="mt-2 text-sm text-gray-500">Searching…</p>}
 
                     {!searching && results.length === 0 && (
-                        <p className="mt-2 text-sm text-gray-500">No results for "{query}". Try a different spelling, or a scholar's name.</p>
+                        <div className="mt-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                            <Compass size={18} style={{ color: 'var(--muted)' }} />
+                            <p className="text-sm text-gray-500">No results for "{query}". Try a category name, or a scholar's name.</p>
+                        </div>
+                    )}
+
+                    {!searching && topicResults.length > 0 && (
+                        <div className="mt-4 flex flex-col gap-3">
+                            {topicResults.map((t, i) => (
+                                <TopicResult key={t.id} topic={t} index={i} />
+                            ))}
+                        </div>
                     )}
 
                     {!searching && episodeResults.length > 0 && (
@@ -188,98 +208,46 @@ function BrowsePage() {
                 </div>
             )}
 
-            {!isSearchActive && (
-                <>
-                    <div className="mt-8">
-                        <SectionHeading>Browse by category</SectionHeading>
+            <AnimatePresence>
+                {!isSearchActive && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}>
 
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {topicsQuery.isLoading && Array.from({ length: 6 }).map((_, i) => <ChipSkeleton key={i} />)}
-
-                            {!topicsQuery.isLoading && topics.length === 0 && (
-                                <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                                    <Compass size={18} style={{ color: 'var(--muted)' }} />
-                                    <p className="text-sm text-gray-500">No categories yet.</p>
-                                </div>
-                            )}
-
-                            {!topicsQuery.isLoading && topics.map((topic, i) => (
-                                <TopicChip
-                                    key={topic.id ?? topic.name}
-                                    name={topic.name}
-                                    icon={ICONS[i % ICONS.length]}
-                                    active={activeTopic === topic.name}
-                                    index={i}
-                                    onClick={() => selectTopic(topic.name)}
-                                />
-                            ))}
+                        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-gray-300 bg-white/60 p-4">
+                            <Compass size={18} className="shrink-0" style={{ color: 'var(--accent)' }} />
+                            <p className="text-sm text-gray-500">Search for a category — like "Tafseer" or "Salah" — to browse lectures by topic.</p>
                         </div>
 
-                        {/* Right below the chips that triggered it — not at the
-                            bottom of the page, past an entire scholar grid, where
-                            it used to render. */}
-                        <AnimatePresence>
-                            {activeTopic && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                                    className="overflow-hidden">
-                                    <div className="mt-5 flex items-center justify-between">
-                                        <p className="text-sm font-medium text-gray-500">
-                                            {topicLoading ? 'Loading…' : `${topicEpisodes.length} in "${activeTopic}"`}
-                                        </p>
-                                        <button
-                                            onClick={() => setActiveTopic(null)}
-                                            className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700">
-                                            <X size={12} /> Clear
-                                        </button>
+                        <div className="mt-8 pb-6">
+                            <SectionHeading>Browse by scholar</SectionHeading>
+
+                            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                {scholarsQuery.isLoading && Array.from({ length: 8 }).map((_, i) => (
+                                    <div key={i} className="flex h-50 flex-col rounded-2xl border border-gray-200 bg-white p-2">
+                                        <div className="skeleton flex-1 rounded-xl" />
+                                        <div className="skeleton mt-2 h-3.5 w-3/4 rounded-full" />
+                                        <div className="skeleton mt-1.5 h-3 w-1/2 rounded-full" />
                                     </div>
+                                ))}
 
-                                    <div className="mt-3 flex flex-col gap-2.5 pb-2">
-                                        {!topicLoading && topicEpisodes.length === 0 && (
-                                            <p className="text-sm text-gray-500">No episodes in this category yet.</p>
-                                        )}
-                                        {!topicLoading && visibleTopicEpisodes.map((ep, i) => (
-                                            <ListCard
-                                                key={ep.id}
-                                                index={i}
-                                                title={ep.title}
-                                                scholarName={ep.scholar?.name}
-                                                thumbnail={ep.thumbnail}
-                                                image={ep.title?.[0]}
-                                                episode={ep}
-                                                queue={topicEpisodes}
-                                            />
-                                        ))}
-                                        {!topicLoading && <div ref={sentinelRef} className="h-1 w-1" aria-hidden="true" />}
+                                {!scholarsQuery.isLoading && scholars.length === 0 && (
+                                    <div className="col-span-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                                        <Users size={18} style={{ color: 'var(--muted)' }} />
+                                        <p className="text-sm text-gray-500">No scholars yet.</p>
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                )}
 
-                    <div className="mt-8 pb-6">
-                        <SectionHeading>Browse by scholar</SectionHeading>
-
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                            {scholarsQuery.isLoading && Array.from({ length: 8 }).map((_, i) => <ScholarCardSkeleton key={i} />)}
-
-                            {!scholarsQuery.isLoading && scholars.length === 0 && (
-                                <div className="col-span-full flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                                    <Users size={18} style={{ color: 'var(--muted)' }} />
-                                    <p className="text-sm text-gray-500">No scholars yet.</p>
-                                </div>
-                            )}
-
-                            {!scholarsQuery.isLoading && scholars.map((s, i) => (
-                                <ScholarCard key={s.id} scholar={s} index={i} />
-                            ))}
+                                {!scholarsQuery.isLoading && scholars.map((s, i) => (
+                                    <ScholarCard key={s.id} scholar={s} index={i} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div>
     )

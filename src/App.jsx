@@ -10,6 +10,7 @@ const BrowsePage = lazy(() => import('./pages/BrowsePage'))
 const QuranPage = lazy(() => import('./pages/QuranPage'))
 const ScholarsPage = lazy(() => import('./pages/ScholarsPage'))
 const EpisodeDetailPage = lazy(() => import('./pages/EpisodeDetailPage'))
+const TopicDetailPage = lazy(() => import('./pages/TopicDetailPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
@@ -39,6 +40,7 @@ function App() {
           <Route path="scholars" element={<ScholarsPage />} />
           <Route path="scholars/:scholarId" element={<ScholarsPage />} />
           <Route path="episode/:episodeId" element={<EpisodeDetailPage />} />
+          <Route path="topics/:topicId" element={<TopicDetailPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

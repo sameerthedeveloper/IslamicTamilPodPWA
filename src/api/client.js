@@ -92,6 +92,11 @@ export async function getTopics() {
   return snap.docs.map(withId)
 }
 
+export async function getTopicById(id) {
+  const snap = await getDoc(doc(db, 'topics', id))
+  return snap.exists() ? withId(snap) : null
+}
+
 // Firestore has no OR queries across values without a composite index for
 // this shape — filter client-side over the already-fetched published set.
 export async function getEpisodesByTopic(topicName) {
@@ -112,7 +117,7 @@ export async function getSeries(page = 1, limit = 20) {
 export async function search(q, type) {
   if (!q?.trim()) return []
   const needle = q.trim().toLowerCase()
-  const collections = type ? [type] : ['episodes', 'scholars', 'series']
+  const collections = type ? [type] : ['episodes', 'scholars', 'series', 'topics']
   const results = await Promise.all(
     collections.map(async (name) => {
       const items = name === 'episodes' ? await publishedEpisodes() : (await getDocs(collection(db, name))).docs.map(withId)

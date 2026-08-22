@@ -113,7 +113,7 @@ function HomePage() {
                             name={topic.name}
                             icon={TOPIC_ICONS[i % TOPIC_ICONS.length]}
                             index={i}
-                            onClick={() => navigate('/browse')}
+                            onClick={() => navigate(`/topics/${topic.id}`)}
                         />
                     ))}
                 </div>
