@@ -37,16 +37,25 @@ function NativeAudioEngine() {
       seek: (time) => {
         if (audioRef.current) audioRef.current.currentTime = time
       },
+      // Called directly and synchronously from the Media Session 'play'
+      // handler (see MediaSessionSync) — iOS only carries the lock-screen
+      // tap's user-activation for a play() call made inside that same
+      // synchronous callback, not one a React effect gets to later.
       resume: () => {
         if (!audioRef.current?.paused) return
-        // A rejection here (autoplay policy blocking a non-gesture
-        // resume, or the OS genuinely meant to keep it paused) doesn't
-        // fire a 'pause' event — it was already paused, nothing changed
-        // — so sync the store here directly instead of relying on
-        // handleNativePause below to catch it.
+        // A rejection here (autoplay policy, or the OS genuinely meant to
+        // keep it paused) doesn't fire a 'pause' event — it was already
+        // paused, nothing changed — so sync the store here directly
+        // instead of relying on handleNativePause below to catch it.
         audioRef.current.play()
           .then(() => usePlayerStore.getState().setPlaying(true))
-          .catch(() => usePlayerStore.getState().setPlaying(false))
+          .catch((err) => {
+            console.error('[audio] resume failed:', err)
+            usePlayerStore.getState().setPlaying(false)
+          })
+      },
+      pause: () => {
+        audioRef.current?.pause()
       },
     })
   }, [])
@@ -200,6 +209,7 @@ function YoutubeEngine() {
                   playerRef.current?.playVideo?.()
                 }
               },
+              pause: () => playerRef.current?.pauseVideo?.(),
             })
             playerRef.current.setVolume(volume * 100)
             forceLowestQuality(playerRef.current)
@@ -283,18 +293,26 @@ function YoutubeEngine() {
 // Also what keeps most browsers from suspending playback when the app is
 // backgrounded — an active MediaSession session signals "this is media
 // playback", not just a hidden tab doing background work.
+const SUPPORTS_MEDIA_SESSION = typeof navigator !== 'undefined' && 'mediaSession' in navigator
+
+// Registering an action the browser doesn't recognize throws — wrap each
+// so one unsupported action can't take the rest down with it.
+function setActionHandler(action, handler) {
+  try {
+    navigator.mediaSession.setActionHandler(action, handler)
+  } catch {
+    // Unsupported action on this browser — fine, play/pause etc. still work.
+  }
+}
+
 function MediaSessionSync() {
   const currentEpisode = usePlayerStore((s) => s.currentEpisode)
   const isPlaying = usePlayerStore((s) => s.isPlaying)
   const duration = usePlayerStore((s) => s.duration)
   const currentTime = usePlayerStore((s) => s.currentTime)
-  const togglePlay = usePlayerStore((s) => s.togglePlay)
-  const next = usePlayerStore((s) => s.next)
-  const prev = usePlayerStore((s) => s.prev)
-  const seek = usePlayerStore((s) => s.seek)
 
   useEffect(() => {
-    if (!('mediaSession' in navigator) || !currentEpisode) return
+    if (!SUPPORTS_MEDIA_SESSION || !currentEpisode) return
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentEpisode.title,
       artist: currentEpisode.scholar?.name ?? '',
@@ -302,19 +320,61 @@ function MediaSessionSync() {
         ? [{ src: currentEpisode.thumbnail, sizes: '512x512', type: 'image/jpeg' }]
         : [],
     })
-    navigator.mediaSession.setActionHandler('play', () => togglePlay())
-    navigator.mediaSession.setActionHandler('pause', () => togglePlay())
-    navigator.mediaSession.setActionHandler('nexttrack', () => next())
-    navigator.mediaSession.setActionHandler('previoustrack', () => prev())
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
-      if (details.seekTime != null) seek(details.seekTime)
+
+    // These read usePlayerStore.getState() fresh on every invocation (not
+    // values captured when this effect ran) so they can't go stale, and —
+    // critically for 'play' — call the actual HTMLAudioElement/YouTube
+    // player synchronously via activeEngine(), in the same tick as the
+    // lock-screen tap. Routing this through isPlaying + a later effect
+    // (the way the in-app play button does, which is fine for a direct
+    // click) loses iOS's implicit user-activation for the play() call by
+    // the time that effect runs — that's what made lock-screen Play stop
+    // reliably resuming after a lock-screen Pause.
+    setActionHandler('play', () => {
+      const { currentEpisode: ep, activeEngine } = usePlayerStore.getState()
+      if (!ep) return
+      activeEngine()?.resume?.()
     })
+    setActionHandler('pause', () => {
+      const { currentEpisode: ep, activeEngine, setPlaying } = usePlayerStore.getState()
+      if (!ep) return
+      setPlaying(false)
+      activeEngine()?.pause?.()
+    })
+    setActionHandler('stop', () => {
+      const { currentEpisode: ep, activeEngine, setPlaying, seek } = usePlayerStore.getState()
+      if (!ep) return
+      setPlaying(false)
+      activeEngine()?.pause?.()
+      seek(0)
+    })
+    setActionHandler('nexttrack', () => usePlayerStore.getState().next())
+    setActionHandler('previoustrack', () => usePlayerStore.getState().prev())
+    setActionHandler('seekbackward', (details) => {
+      usePlayerStore.getState().skipBy(-(details.seekOffset || 10))
+    })
+    setActionHandler('seekforward', (details) => {
+      usePlayerStore.getState().skipBy(details.seekOffset || 10)
+    })
+    setActionHandler('seekto', (details) => {
+      if (details.seekTime != null) usePlayerStore.getState().seek(details.seekTime)
+    })
+
     return () => {
-      navigator.mediaSession.setActionHandler('play', null)
-      navigator.mediaSession.setActionHandler('pause', null)
-      navigator.mediaSession.setActionHandler('nexttrack', null)
-      navigator.mediaSession.setActionHandler('previoustrack', null)
-      navigator.mediaSession.setActionHandler('seekto', null)
+      setActionHandler('play', null)
+      setActionHandler('pause', null)
+      setActionHandler('stop', null)
+      setActionHandler('nexttrack', null)
+      setActionHandler('previoustrack', null)
+      setActionHandler('seekbackward', null)
+      setActionHandler('seekforward', null)
+      setActionHandler('seekto', null)
+      // currentEpisode is the dep this whole effect re-runs on — becoming
+      // null (queue exhausted, or onEnded with nothing next) means
+      // playback is genuinely over, not just paused.
+      if (!usePlayerStore.getState().currentEpisode) {
+        navigator.mediaSession.playbackState = 'none'
+      }
     }
   }, [currentEpisode])
 
