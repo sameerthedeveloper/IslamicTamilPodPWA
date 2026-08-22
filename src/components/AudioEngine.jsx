@@ -42,19 +42,24 @@ function NativeAudioEngine() {
       // tap's user-activation for a play() call made inside that same
       // synchronous callback, not one a React effect gets to later.
       resume: () => {
+        console.log('[audio] engine.resume() called, paused =', audioRef.current?.paused)
         if (!audioRef.current?.paused) return
         // A rejection here (autoplay policy, or the OS genuinely meant to
         // keep it paused) doesn't fire a 'pause' event — it was already
         // paused, nothing changed — so sync the store here directly
         // instead of relying on handleNativePause below to catch it.
         audioRef.current.play()
-          .then(() => usePlayerStore.getState().setPlaying(true))
+          .then(() => {
+            console.log('[audio] engine.resume() succeeded')
+            usePlayerStore.getState().setPlaying(true)
+          })
           .catch((err) => {
-            console.error('[audio] resume failed:', err)
+            console.error('[audio] engine.resume() FAILED:', err?.name, err?.message)
             usePlayerStore.getState().setPlaying(false)
           })
       },
       pause: () => {
+        console.log('[audio] engine.pause() called')
         audioRef.current?.pause()
       },
     })
@@ -121,15 +126,24 @@ function NativeAudioEngine() {
   const handleNativePause = () => {
     if (isYoutube) return
     const { isPlaying: storeIsPlaying, setPlaying } = usePlayerStore.getState()
+    console.log('[audio] native "pause" event fired, store isPlaying =', storeIsPlaying)
     if (!storeIsPlaying) return
+    console.log('[audio] involuntary pause detected — attempting immediate resume')
     audioRef.current?.play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false))
+      .then(() => {
+        console.log('[audio] involuntary-pause resume succeeded')
+        setPlaying(true)
+      })
+      .catch((err) => {
+        console.error('[audio] involuntary-pause resume FAILED:', err?.name, err?.message)
+        setPlaying(false)
+      })
   }
 
   const handleNativePlay = () => {
     if (isYoutube) return
     const { isPlaying: storeIsPlaying, setPlaying } = usePlayerStore.getState()
+    console.log('[audio] native "play" event fired, store isPlaying =', storeIsPlaying)
     if (!storeIsPlaying) setPlaying(true)
   }
 
@@ -312,7 +326,12 @@ function MediaSessionSync() {
   const currentTime = usePlayerStore((s) => s.currentTime)
 
   useEffect(() => {
-    if (!SUPPORTS_MEDIA_SESSION || !currentEpisode) return
+    if (!SUPPORTS_MEDIA_SESSION) {
+      console.log('[audio] Media Session API not supported in this browser')
+      return
+    }
+    if (!currentEpisode) return
+    console.log('[audio] registering mediaSession handlers for', currentEpisode.title)
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentEpisode.title,
       artist: currentEpisode.scholar?.name ?? '',
@@ -331,11 +350,13 @@ function MediaSessionSync() {
     // the time that effect runs — that's what made lock-screen Play stop
     // reliably resuming after a lock-screen Pause.
     setActionHandler('play', () => {
+      console.log('[audio] mediaSession "play" action received')
       const { currentEpisode: ep, activeEngine } = usePlayerStore.getState()
       if (!ep) return
       activeEngine()?.resume?.()
     })
     setActionHandler('pause', () => {
+      console.log('[audio] mediaSession "pause" action received')
       const { currentEpisode: ep, activeEngine, setPlaying } = usePlayerStore.getState()
       if (!ep) return
       setPlaying(false)
