@@ -4,6 +4,7 @@ import { usePlayerStore } from '../store/playerStore'
 import { useActivePlayerStore } from '../store/activePlayerStore'
 import EqualizerBars from './EqualizerBars'
 import { useImageFallback } from '../hooks/useImageFallback'
+import { useImmersiveRoute } from '../hooks/useImmersiveRoute'
 
 // Keyed by episode id from the parent (see usage below) so the fallback
 // resets per episode instead of sticking after the first broken image.
@@ -36,6 +37,7 @@ function MiniPlayer() {
     const currentTime = usePlayerStore((s) => s.currentTime)
     const duration = usePlayerStore((s) => s.duration)
     const active = useActivePlayerStore((s) => s.active)
+    const isImmersive = useImmersiveRoute()
 
     // Only one of {episode, Quran} mini players docks at a time — whichever
     // the user most recently engaged with.
@@ -51,7 +53,7 @@ function MiniPlayer() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-x-6 bottom-22 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-116 sm:-translate-x-1/2 lg:mx-10 lg:mb-3 lg:rounded-full lg:bottom-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0  lg:border lg:border-gray-300 lg:shadow">
+            className={`fixed inset-x-6 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-116 sm:-translate-x-1/2 lg:mx-10 lg:mb-3 lg:rounded-full lg:bottom-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0 lg:border lg:border-gray-300 lg:shadow ${isImmersive ? 'bottom-3' : 'bottom-22'}`}>
 
             <div className="h-0.5 w-full bg-gray-100">
                 <div

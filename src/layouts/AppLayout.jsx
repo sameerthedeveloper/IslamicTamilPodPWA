@@ -13,6 +13,7 @@ import QuranFullPlayerSheet from '../components/QuranFullPlayerSheet'
 import { usePlayerStore } from '../store/playerStore'
 import { useQuranStore } from '../store/quranStore'
 import { useActivePlayerStore } from '../store/activePlayerStore'
+import { useImmersiveRoute } from '../hooks/useImmersiveRoute'
 
 function AppLayout() {
   const { pathname } = useLocation()
@@ -23,7 +24,7 @@ function AppLayout() {
   // just be redundant chrome eating space — unlike /scholars itself,
   // which is a bottom-nav destination with no other way to switch tabs,
   // so that one keeps its nav.
-  const isImmersive = pathname.startsWith('/episode/') || (pathname.startsWith('/scholars/') && pathname !== '/scholars')
+  const isImmersive = useImmersiveRoute()
 
   // Mirrors the visibility logic in MiniPlayer/QuranMiniPlayer — when one
   // of them is docked, scrollable content needs extra bottom padding or
@@ -53,7 +54,9 @@ function AppLayout() {
 
       <main
         className={`flex-1 overflow-y-auto ${isImmersive ? 'pt-[env(safe-area-inset-top)]' : 'pt-[calc(5rem+env(safe-area-inset-top))]'} ${
-          miniPlayerDocked ? 'pb-[calc(11rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6rem+env(safe-area-inset-bottom))]'
+          isImmersive
+            ? (miniPlayerDocked ? 'pb-[calc(7rem+env(safe-area-inset-bottom))]' : 'pb-[env(safe-area-inset-bottom)]')
+            : (miniPlayerDocked ? 'pb-[calc(11rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6rem+env(safe-area-inset-bottom))]')
         } sm:mx-auto sm:w-full sm:max-w-lg sm:border-x sm:border-[var(--border)] lg:mx-0 lg:max-w-none lg:border-x-0 lg:pt-8 lg:pb-28 lg:pl-64`}>
         <ErrorBoundary>
           <AnimatePresence mode="wait">
