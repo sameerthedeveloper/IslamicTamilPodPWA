@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Search, Mic, BookOpen, GraduationCap, Users, Compass, X } from 'lucide-react'
 import { getTopics, getEpisodesByTopic, search as searchApi } from '../api/client'
-import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
+import ListCard from '../components/Card/ListCard'
+import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const ICONS = [Mic, BookOpen, GraduationCap, Users]
 
@@ -76,6 +78,9 @@ function BrowsePage() {
 
     const episodeResults = results?.filter((r) => r.type === 'episode') ?? []
     const otherResults = results?.filter((r) => r.type !== 'episode') ?? []
+
+    const { visibleCount, sentinelRef } = useIncrementalReveal(topicEpisodes.length, 20)
+    const visibleTopicEpisodes = topicEpisodes.slice(0, visibleCount)
 
     return (
         <div className="px-5 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-10">
@@ -164,12 +169,16 @@ function BrowsePage() {
                         const Icon = ICONS[i % ICONS.length]
                         const active = activeTopic === topic.name
                         return (
-                            <button
+                            <motion.button
                                 key={topic.id ?? topic.name}
                                 onClick={() => selectTopic(topic.name)}
-                                className="animate-rise-in rounded-2xl border p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                whileHover={{ y: -3 }}
+                                whileTap={{ scale: 0.98 }}
+                                transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                                className="rounded-2xl border p-4 text-left shadow-sm transition-shadow duration-200 hover:shadow-md"
                                 style={{
-                                    animationDelay: `${Math.min(i, 8) * 60}ms`,
                                     borderColor: active ? 'var(--accent)' : '#e5e7eb',
                                     background: active ? 'var(--accent-soft)' : 'white',
                                 }}>
@@ -185,7 +194,7 @@ function BrowsePage() {
                                     {topic.name}
                                 </p>
 
-                            </button>
+                            </motion.button>
                         )
                     })}
 
@@ -193,28 +202,41 @@ function BrowsePage() {
 
             </div>
 
-            {activeTopic && (
-                <div className="mt-6 animate-rise-in">
-                    <CardLayout title={activeTopic}>
-                        {topicLoading && <p className="text-sm text-gray-500">Loading…</p>}
-                        {!topicLoading && topicEpisodes.length === 0 && (
-                            <p className="text-sm text-gray-500">No episodes in this category yet.</p>
-                        )}
-                        {!topicLoading && topicEpisodes.map((ep, i) => (
-                            <TitleCard
-                                key={ep.id}
-                                index={i}
-                                title={ep.title}
-                                scholarName={ep.scholar?.name}
-                                thumbnail={ep.thumbnail}
-                                image={ep.title?.[0]}
-                                episode={ep}
-                                queue={topicEpisodes}
-                            />
-                        ))}
-                    </CardLayout>
-                </div>
-            )}
+            <AnimatePresence>
+                {activeTopic && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="mt-8 overflow-hidden">
+                        <div className="flex items-center gap-2.5">
+                            <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+                            <h2 className="font-display text-xl font-semibold text-gray-900">{activeTopic}</h2>
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-2.5 pb-6">
+                            {topicLoading && <p className="text-sm text-gray-500">Loading…</p>}
+                            {!topicLoading && topicEpisodes.length === 0 && (
+                                <p className="text-sm text-gray-500">No episodes in this category yet.</p>
+                            )}
+                            {!topicLoading && visibleTopicEpisodes.map((ep, i) => (
+                                <ListCard
+                                    key={ep.id}
+                                    index={i}
+                                    title={ep.title}
+                                    scholarName={ep.scholar?.name}
+                                    thumbnail={ep.thumbnail}
+                                    image={ep.title?.[0]}
+                                    episode={ep}
+                                    queue={topicEpisodes}
+                                />
+                            ))}
+                            {!topicLoading && <div ref={sentinelRef} className="h-1 w-1" aria-hidden="true" />}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div>
     )

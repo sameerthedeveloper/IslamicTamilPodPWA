@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronDown, Play, Pause, FastForwardIcon, RewindIcon,
   RotateCcw, RotateCw, Gauge, Moon, Volume1, Volume2, VolumeX, Star,
@@ -61,25 +62,24 @@ function FullPlayerSheet() {
   const [showVolume, setShowVolume] = useState(false)
   const [showSleep, setShowSleep] = useState(false)
 
-  if (!isPlayerOpen || !currentEpisode) return null
+  const visible = isPlayerOpen && !!currentEpisode
 
   const pct = duration ? (currentTime / duration) * 100 : 0
-  const idx = queue.findIndex((e) => e.id === currentEpisode.id)
+  const idx = currentEpisode ? queue.findIndex((e) => e.id === currentEpisode.id) : -1
   const hasPrev = idx > 0
   const hasNext = idx >= 0 && idx < queue.length - 1
 
   return (
-    <div
-      className="fixed inset-0 z-60 flex flex-col bg-gray-100 animate-[fullplayer-in_0.35s_cubic-bezier(0.22,1,0.36,1)] sm:left-1/2 sm:right-auto sm:w-full sm:max-w-lg sm:-translate-x-1/2 sm:border-x sm:border-gray-200"
-      style={{
-        animationFillMode: 'backwards',
-      }}
+    <AnimatePresence>
+      {visible && (
+    <motion.div
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-0 z-60 flex flex-col bg-gray-100 sm:left-1/2 sm:right-auto sm:w-full sm:max-w-lg sm:-translate-x-1/2 sm:border-x sm:border-gray-200"
     >
       <style>{`
-        @keyframes fullplayer-in {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
         @keyframes now-playing-wave {
           0%, 100% { transform: scaleY(0.3); }
           50% { transform: scaleY(1); }
@@ -350,7 +350,9 @@ function FullPlayerSheet() {
         </div>
 
       </main>
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
 

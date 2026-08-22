@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, FastForwardIcon, RewindIcon } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
 import { useActivePlayerStore } from '../store/activePlayerStore'
@@ -16,12 +17,18 @@ function MiniPlayer() {
 
     // Only one of {episode, Quran} mini players docks at a time — whichever
     // the user most recently engaged with.
-    if (!currentEpisode || active === 'quran') return null
+    const visible = currentEpisode && active !== 'quran'
 
     const pct = duration ? Math.min(100, (currentTime / duration) * 100) : 0
 
     return (
-        <div id="mini-player"
+        <AnimatePresence>
+            {visible && (
+        <motion.div id="mini-player"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-x-6 bottom-22 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-lg sm:left-1/2 sm:right-auto sm:w-full sm:max-w-116 sm:-translate-x-1/2 lg:mx-10 lg:mb-3 lg:rounded-full lg:bottom-0 lg:left-64 lg:right-0 lg:w-auto lg:max-w-none lg:translate-x-0  lg:border lg:border-gray-300 lg:shadow">
 
             <div className="h-0.5 w-full bg-gray-100">
@@ -43,7 +50,7 @@ function MiniPlayer() {
                     className={`font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden transition-shadow duration-300 ${isPlaying ? 'animate-glow-pulse' : ''}`}
                     style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
                     {currentEpisode.thumbnail ? (
-                        <img src={currentEpisode.thumbnail} alt="" className="h-full w-full object-cover" />
+                        <img src={currentEpisode.thumbnail} alt="" decoding="async" className="h-full w-full object-cover" />
                     ) : (
                         currentEpisode.title?.[0] ?? 'I'
                     )}
@@ -100,7 +107,9 @@ function MiniPlayer() {
             </div>
 
             </div>
-        </div>
+        </motion.div>
+            )}
+        </AnimatePresence>
     )
 }
 

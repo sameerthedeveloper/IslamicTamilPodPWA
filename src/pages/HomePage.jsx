@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { CloudOff, Sparkles } from 'lucide-react'
 import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
+import FeaturedCard from '../components/Card/FeaturedCard'
 import { getEpisodes, getHistory } from '../api/client'
 import { useUserStore } from '../store/userStore'
+import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
 
 function CardSkeleton() {
     return (
@@ -83,6 +85,10 @@ function HomePage() {
         return () => { cancelled = true }
     }, [authStatus])
 
+    const discoverEpisodes = [...episodes].reverse()
+    const { visibleCount, sentinelRef } = useIncrementalReveal(discoverEpisodes.length, 16)
+    const visibleDiscover = discoverEpisodes.slice(0, visibleCount)
+
     return (
         <div className="px-5 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-1">
 
@@ -93,6 +99,28 @@ function HomePage() {
             <p className="mt-2 text-gray-500">
                 Listen to Tamil Islamic lectures and Quran recitations.
             </p>
+
+            <CardLayout title="Featured">
+                {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+                {!loading && error && (
+                    <EmptyRow icon={CloudOff} message="Couldn't load episodes." />
+                )}
+                {!loading && !error && episodes.length === 0 && (
+                    <EmptyRow icon={Sparkles} message="Nothing here yet." />
+                )}
+                {!loading && !error && [...episodes].reverse().slice(0, 6).map((ep, i, arr) => (
+                    <FeaturedCard
+                        key={ep.id}
+                        index={i}
+                        title={ep.title}
+                        scholarName={ep.scholar?.name}
+                        thumbnail={ep.thumbnail}
+                        image={ep.title?.[0]}
+                        episode={ep}
+                        queue={arr}
+                    />
+                ))}
+            </CardLayout>
 
             <CardLayout title="Continue Listening">
                 {historyLoading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
@@ -124,7 +152,7 @@ function HomePage() {
                 {!loading && !error && episodes.length === 0 && (
                     <EmptyRow icon={Sparkles} message="Nothing here yet." />
                 )}
-                {!loading && !error && [...episodes].reverse().map((ep, i, arr) => (
+                {!loading && !error && visibleDiscover.map((ep, i) => (
                     <TitleCard
                         key={ep.id}
                         index={i}
@@ -133,9 +161,10 @@ function HomePage() {
                         thumbnail={ep.thumbnail}
                         image={ep.title?.[0]}
                         episode={ep}
-                        queue={arr}
+                        queue={discoverEpisodes}
                     />
                 ))}
+                {!loading && !error && <div ref={sentinelRef} className="h-1 w-1 shrink-0" aria-hidden="true" />}
             </CardLayout>
 
         </div>

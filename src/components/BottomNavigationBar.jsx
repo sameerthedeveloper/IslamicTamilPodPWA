@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { Home, Search, Book, Bookmark } from 'lucide-react'
+import { Home, Search, GraduationCap, Bookmark } from 'lucide-react'
 
 const TABS = [
     { to: '/', label: 'Home', icon: Home, end: true },
     { to: '/library', label: 'Library', icon: Bookmark },
     { to: '/browse', label: 'Discover', icon: Search },
-    { to: '/quran', label: 'Quran', icon: Book },
+    { to: '/scholars', label: 'Scholars', icon: GraduationCap },
 ]
 
 function BottomNavigationBar() {

@@ -1,57 +1,66 @@
+import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
-import HomePage from './pages/HomePage'
-import LibraryPage from './pages/LibraryPage'
-import BrowsePage from './pages/BrowsePage'
-import QuranPage from './pages/QuranPage'
-import SettingsPage from './pages/SettingsPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './admin/components/ProtectedRoute'
-import AdminLogin from './admin/pages/Login'
-import Dashboard from './admin/pages/Dashboard'
-import Episodes from './admin/pages/Episodes'
-import Scholars from './admin/pages/Scholars'
-import Series from './admin/pages/Series'
-import Playlists from './admin/pages/Playlists'
-import Topics from './admin/pages/Topics'
-import Audio from './admin/pages/Audio'
-import Rights from './admin/pages/Rights'
-import Users from './admin/pages/Users'
-import Featured from './admin/pages/Featured'
-import Settings from './admin/pages/Settings'
+import PageLoader from './components/PageLoader'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
+const BrowsePage = lazy(() => import('./pages/BrowsePage'))
+const QuranPage = lazy(() => import('./pages/QuranPage'))
+const ScholarsPage = lazy(() => import('./pages/ScholarsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+
+const AdminLogin = lazy(() => import('./admin/pages/Login'))
+const Dashboard = lazy(() => import('./admin/pages/Dashboard'))
+const Episodes = lazy(() => import('./admin/pages/Episodes'))
+const Scholars = lazy(() => import('./admin/pages/Scholars'))
+const Series = lazy(() => import('./admin/pages/Series'))
+const Playlists = lazy(() => import('./admin/pages/Playlists'))
+const Topics = lazy(() => import('./admin/pages/Topics'))
+const Audio = lazy(() => import('./admin/pages/Audio'))
+const Rights = lazy(() => import('./admin/pages/Rights'))
+const Users = lazy(() => import('./admin/pages/Users'))
+const Featured = lazy(() => import('./admin/pages/Featured'))
+const Settings = lazy(() => import('./admin/pages/Settings'))
 
 function App() {
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="library" element={<LibraryPage />} />
-        <Route path="browse" element={<BrowsePage />} />
-        <Route path="quran" element={<QuranPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="library" element={<LibraryPage />} />
+          <Route path="browse" element={<BrowsePage />} />
+          <Route path="quran" element={<QuranPage />} />
+          <Route path="scholars" element={<ScholarsPage />} />
+          <Route path="scholars/:scholarId" element={<ScholarsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
 
-      <Route path="login" element={<LoginPage />} />
-      <Route path="register" element={<RegisterPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
 
-      <Route path="admin/login" element={<AdminLogin />} />
-      <Route path="admin" element={<ProtectedRoute />}>
-        <Route index element={<Dashboard />} />
-        <Route path="episodes" element={<Episodes />} />
-        <Route path="scholars" element={<Scholars />} />
-        <Route path="series" element={<Series />} />
-        <Route path="playlists" element={<Playlists />} />
-        <Route path="topics" element={<Topics />} />
-        <Route path="audio" element={<Audio />} />
-        <Route path="rights" element={<Rights />} />
-        <Route path="users" element={<Users />} />
-        <Route path="featured" element={<Featured />} />
-        <Route path="settings" element={<Settings />} />
-      </Route>
+        <Route path="admin/login" element={<AdminLogin />} />
+        <Route path="admin" element={<ProtectedRoute />}>
+          <Route index element={<Dashboard />} />
+          <Route path="episodes" element={<Episodes />} />
+          <Route path="scholars" element={<Scholars />} />
+          <Route path="series" element={<Series />} />
+          <Route path="playlists" element={<Playlists />} />
+          <Route path="topics" element={<Topics />} />
+          <Route path="audio" element={<Audio />} />
+          <Route path="rights" element={<Rights />} />
+          <Route path="users" element={<Users />} />
+          <Route path="featured" element={<Featured />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   )
 }
 

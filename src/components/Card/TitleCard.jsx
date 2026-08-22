@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion'
 import { usePlayerStore } from '../../store/playerStore'
 import BookmarkButton from '../BookmarkButton'
+import { cardEntrance, cardHover } from '../../lib/motion'
 
 function TitleCard({ title, image, scholarName, thumbnail, episode, queue, index = 0 }) {
   const play = usePlayerStore((s) => s.play)
@@ -9,15 +11,16 @@ function TitleCard({ title, image, scholarName, thumbnail, episode, queue, index
   }
 
   return (
-    <div
+    <motion.div
       onClick={handleClick}
-      style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
-      className="animate-rise-in flex h-50 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]">
+      {...cardEntrance(index)}
+      {...cardHover}
+      className="flex h-50 w-40 shrink-0 flex-col rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-200 cursor-pointer hover:shadow-md">
       <div
         className="relative flex flex-1 items-center justify-center rounded-xl border border-gray-200 overflow-hidden"
         style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--base))' }}>
         {thumbnail ? (
-          <img src={thumbnail} alt={title} className="h-full w-full object-cover" />
+          <img src={thumbnail} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <span className="font-display text-3xl font-semibold" style={{ color: 'var(--accent)' }}>{image}</span>
         )}
@@ -32,7 +35,7 @@ function TitleCard({ title, image, scholarName, thumbnail, episode, queue, index
           {scholarName}
         </p>
       )}
-    </div>
+    </motion.div>
   )
 }
 

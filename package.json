@@ -8,12 +8,14 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed:abdul-basith": "node scripts/seedAbdulBasithEpisodes.js"
+    "seed:abdul-basith": "node scripts/seedAbdulBasithEpisodes.js",
+    "seed:tamildawah": "node scripts/seedTamilDawahEpisodes.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
     "firebase": "^12.17.1",
+    "framer-motion": "^13.1.1",
     "lucide-react": "^1.31.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

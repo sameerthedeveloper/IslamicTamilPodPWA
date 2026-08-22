@@ -75,6 +75,18 @@ export async function getScholar(slug) {
   return snap.docs[0] ? withId(snap.docs[0]) : null
 }
 
+export async function getScholarById(id) {
+  const snap = await getDoc(doc(db, 'scholars', id))
+  return snap.exists() ? withId(snap) : null
+}
+
+// Firestore has no OR queries across values without a composite index for
+// this shape — filter client-side over the already-fetched published set.
+export async function getEpisodesByScholarId(scholarId) {
+  const all = await publishedEpisodes()
+  return all.filter((ep) => ep.scholarId === scholarId)
+}
+
 export async function getTopics() {
   const snap = await getDocs(query(collection(db, 'topics'), orderBy('name')))
   return snap.docs.map(withId)

@@ -38,7 +38,7 @@ function LibraryRow({ item, onRemove, showProgress, queue }) {
         style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}
       >
         {item.thumbnail ? (
-          <img src={item.thumbnail} alt="" className="h-full w-full object-cover" />
+          <img src={item.thumbnail} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           <Play size={18} fill="white" />
         )}
