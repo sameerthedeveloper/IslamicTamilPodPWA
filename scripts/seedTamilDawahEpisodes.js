@@ -9,9 +9,10 @@
 //
 // Requires an existing ADMIN-role user (src/admin/store/authStore.js checks
 // users/{uid}.role === 'ADMIN') and the same VITE_FIREBASE_* env vars the
-// app itself uses (loaded from .env via dotenv below). Idempotent: skips
-// any episode whose title already exists in the collection, so it's safe
-// to re-run (e.g. after refreshing the source JSON).
+// app itself uses (loaded from .env via dotenv below). Idempotent/upsert:
+// episodes are matched to existing Firestore docs by title — a new title
+// creates a doc, a title that already exists gets only its changed fields
+// updated — so it's safe to re-run after editing the source JSON.
 
 import 'dotenv/config'
 import { readFileSync } from 'node:fs'
@@ -30,6 +31,7 @@ import {
   query,
   where,
 } from 'firebase/firestore'
+import { canonicalSpeakerName } from './lib/speakerNames.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_PATH = path.join(__dirname, '..', 'tamildawah_audio_v2.json')
@@ -45,25 +47,6 @@ const firebaseConfig = {
 
 // Firestore batched writes cap at 500 ops — chunk well under that.
 const BATCH_CHUNK_SIZE = 400
-
-// The source site publishes short-clip episodes from the same scholar
-// under a "<Name> Shorts" byline (e.g. "Ali Akbar Umari Shorts") — an
-// exact-match on `speaker` was creating a second, duplicate scholar for
-// every one of those instead of linking back to the real one.
-const SHORTS_SUFFIX = / Shorts$/i
-
-// Older seed data (scripts/seedAbdulBasithEpisodes.js) already created a
-// scholar named "Abdul Basith"; this source's fuller "Abdul Basith Bukhari"
-// byline must resolve to that same scholar rather than create a duplicate.
-const SPEAKER_ALIASES = {
-  'Abdul Basith Bukhari': 'Abdul Basith',
-}
-
-function canonicalSpeakerName(name) {
-  if (!name) return name
-  const stripped = name.replace(SHORTS_SUFFIX, '').trim()
-  return SPEAKER_ALIASES[stripped] ?? stripped
-}
 
 // "31-07-2026" -> ms epoch, parsed manually instead of `new Date(str)` so
 // it doesn't depend on the runtime's locale/engine date-parsing quirks.
@@ -108,7 +91,7 @@ async function main() {
   const scholarsByName = new Map(scholarsSnap.docs.map((d) => [d.data().name, d.id]))
   const seriesByName = new Map(seriesSnap.docs.map((d) => [d.data().name, d.id]))
   const topicsByName = new Map(topicsSnap.docs.map((d) => [d.data().name, d.id]))
-  const existingTitles = new Set(episodesSnap.docs.map((d) => d.data().title))
+  const existingByTitle = new Map(episodesSnap.docs.map((d) => [d.data().title, d]))
 
   // Pass 0 — repair: an earlier run (before canonicalSpeakerName existed)
   // may have already created a duplicate scholar for a raw "<Name> Shorts"
@@ -183,43 +166,76 @@ async function main() {
 
   console.log(`Scholars: ${scholarsByName.size}, Series: ${seriesByName.size}, Topics: ${topicsByName.size}`)
 
-  // Pass 2 — write episodes, skipping any title already present.
-  const toCreate = records.filter((r) => r.title && !existingTitles.has(r.title))
-  let created = 0
-  const skipped = records.length - toCreate.length
-
-  for (let i = 0; i < toCreate.length; i += BATCH_CHUNK_SIZE) {
-    const chunk = toCreate.slice(i, i + BATCH_CHUNK_SIZE)
-    const batch = writeBatch(db)
-    chunk.forEach((r) => {
-      const speakerName = canonicalSpeakerName(r.speaker)
-      const scholarId = speakerName ? scholarsByName.get(speakerName) ?? null : null
-      const seriesId = r.series ? seriesByName.get(r.series) ?? null : null
-      const createdAt = parseDDMMYYYY(r.date) ?? (r.published ? new Date(r.published).getTime() : Date.now())
-      const ref = doc(collection(db, 'episodes'))
-      batch.set(ref, {
-        title: r.title,
-        scholarId,
-        scholar: { name: speakerName || null },
-        seriesId,
-        series: r.series ? { name: r.series } : null,
-        topics: r.topics || [],
-        description: r.description_tamil || '',
-        location: r.location || '',
-        sourceUrl: r.url || null,
-        status: 'PUBLISHED',
-        sourceType: 'IMPORT',
-        youtubeId: null,
-        audioUrl: r.audio_url || null,
-        createdAt,
-      })
-      created += 1
-    })
-    await batch.commit()
-    console.log(`Wrote ${Math.min(i + BATCH_CHUNK_SIZE, toCreate.length)}/${toCreate.length} episodes…`)
+  // Pass 2 — upsert episodes: create any new title, update changed fields
+  // on any title that already exists (so edits to the source JSON — a
+  // fixed audioUrl, a re-tagged topic, a corrected series — propagate).
+  function fieldsFor(r) {
+    const speakerName = canonicalSpeakerName(r.speaker)
+    return {
+      scholarId: speakerName ? scholarsByName.get(speakerName) ?? null : null,
+      scholar: { name: speakerName || null },
+      seriesId: r.series ? seriesByName.get(r.series) ?? null : null,
+      series: r.series ? { name: r.series } : null,
+      topics: r.topics || [],
+      description: r.description_tamil || '',
+      location: r.location || '',
+      sourceUrl: r.url || null,
+      audioUrl: r.audio_url || null,
+      createdAt: parseDDMMYYYY(r.date) ?? (r.published ? new Date(r.published).getTime() : Date.now()),
+    }
   }
 
-  console.log(`Done. Created ${created}, skipped ${skipped} (already existed).`)
+  function diff(next, existing) {
+    const changed = {}
+    for (const key of Object.keys(next)) {
+      if (JSON.stringify(next[key]) !== JSON.stringify(existing[key])) changed[key] = next[key]
+    }
+    return changed
+  }
+
+  const withTitle = records.filter((r) => r.title)
+  let created = 0
+  let updated = 0
+  let unchanged = 0
+
+  for (let i = 0; i < withTitle.length; i += BATCH_CHUNK_SIZE) {
+    const chunk = withTitle.slice(i, i + BATCH_CHUNK_SIZE)
+    const batch = writeBatch(db)
+    let opsInBatch = 0
+
+    chunk.forEach((r) => {
+      const existingDoc = existingByTitle.get(r.title)
+      const next = fieldsFor(r)
+
+      if (!existingDoc) {
+        const ref = doc(collection(db, 'episodes'))
+        batch.set(ref, {
+          title: r.title,
+          ...next,
+          status: 'PUBLISHED',
+          sourceType: 'IMPORT',
+          youtubeId: null,
+        })
+        created += 1
+        opsInBatch += 1
+        return
+      }
+
+      const changed = diff(next, existingDoc.data())
+      if (Object.keys(changed).length === 0) {
+        unchanged += 1
+        return
+      }
+      batch.update(existingDoc.ref, changed)
+      updated += 1
+      opsInBatch += 1
+    })
+
+    if (opsInBatch > 0) await batch.commit()
+    console.log(`Processed ${Math.min(i + BATCH_CHUNK_SIZE, withTitle.length)}/${withTitle.length} episodes…`)
+  }
+
+  console.log(`Done. Created ${created}, updated ${updated}, unchanged ${unchanged}.`)
   process.exit(0)
 }
 

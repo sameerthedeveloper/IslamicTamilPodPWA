@@ -83,6 +83,17 @@ body {
   animation: glow-pulse 2.2s ease-out infinite;
 }
 
+/* Soft gold breathing glow around the Now Playing medallion — the one
+   moving accessory that screen keeps, in place of literally spinning a
+   person's portrait like a record. */
+@keyframes medallion-glow {
+  0%, 100% { box-shadow: 0 12px 30px -8px rgba(0,0,0,0.6), 0 0 0 0 rgba(184,147,74,0.35); }
+  50% { box-shadow: 0 12px 30px -8px rgba(0,0,0,0.6), 0 0 0 10px rgba(184,147,74,0); }
+}
+.animate-medallion-glow {
+  animation: medallion-glow 2.6s ease-out infinite;
+}
+
 /* Tiny 3-bar equalizer, used in place of a static icon while audio is
    actually playing — the one place a looping animation earns its keep. */
 @keyframes eq-bar {
@@ -109,7 +120,7 @@ body {
 .eq-bars span:nth-child(3) { animation-delay: 0s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise-in, .skeleton, .skeleton-gold, .animate-glow-pulse, .eq-bars span {
+  .animate-rise-in, .skeleton, .skeleton-gold, .animate-glow-pulse, .animate-medallion-glow, .eq-bars span {
     animation: none !important;
   }
 }

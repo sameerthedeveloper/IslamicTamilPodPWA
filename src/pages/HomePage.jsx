@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
-import { CloudOff, Sparkles } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CloudOff, Sparkles, Mic, BookOpen, GraduationCap, Users } from 'lucide-react'
 import CardLayout from '../components/Card/CardLayout'
 import TitleCard from '../components/Card/TitleCard'
 import FeaturedCard from '../components/Card/FeaturedCard'
-import { getEpisodes, getHistory } from '../api/client'
+import TopicChip from '../components/Card/TopicChip'
+import ScholarSpotlightCard from '../components/Card/ScholarSpotlightCard'
+import { getEpisodes, getHistory, getTopics, getScholars } from '../api/client'
 import { useUserStore } from '../store/userStore'
 import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
+
+const TOPIC_ICONS = [Mic, BookOpen, GraduationCap, Users]
 
 function CardSkeleton() {
     return (
@@ -40,8 +45,11 @@ function historyToEpisode(h) {
 }
 
 function HomePage() {
+    const navigate = useNavigate()
     const [episodes, setEpisodes] = useState([])
     const [continueListening, setContinueListening] = useState([])
+    const [topics, setTopics] = useState([])
+    const [scholars, setScholars] = useState([])
     const [loading, setLoading] = useState(true)
     const [historyLoading, setHistoryLoading] = useState(true)
     const [historyError, setHistoryError] = useState(false)
@@ -59,6 +67,20 @@ function HomePage() {
             })
             .finally(() => {
                 if (!cancelled) setLoading(false)
+            })
+        getTopics()
+            .then((data) => {
+                if (!cancelled) setTopics(Array.isArray(data) ? data : (data?.data ?? []))
+            })
+            .catch(() => {
+                if (!cancelled) setTopics([])
+            })
+        getScholars()
+            .then((data) => {
+                if (!cancelled) setScholars(data)
+            })
+            .catch(() => {
+                if (!cancelled) setScholars([])
             })
         return () => { cancelled = true }
     }, [])
@@ -89,6 +111,16 @@ function HomePage() {
     const { visibleCount, sentinelRef } = useIncrementalReveal(discoverEpisodes.length, 16)
     const visibleDiscover = discoverEpisodes.slice(0, visibleCount)
 
+    // Spotlight the most-lectured scholar — a genuine "most active" signal
+    // computed from what's already fetched, not a random or hardcoded pick.
+    const scholarEpisodeCounts = {}
+    for (const ep of episodes) {
+        if (ep.scholarId) scholarEpisodeCounts[ep.scholarId] = (scholarEpisodeCounts[ep.scholarId] ?? 0) + 1
+    }
+    const spotlightScholar = scholars.length
+        ? [...scholars].sort((a, b) => (scholarEpisodeCounts[b.id] ?? 0) - (scholarEpisodeCounts[a.id] ?? 0))[0]
+        : null
+
     return (
         <div className="px-5 pt-6 lg:mx-auto lg:max-w-5xl lg:px-10 lg:pt-1">
 
@@ -99,6 +131,20 @@ function HomePage() {
             <p className="mt-2 text-gray-500">
                 Listen to Tamil Islamic lectures and Quran recitations.
             </p>
+
+            {topics.length > 0 && (
+                <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {topics.map((topic, i) => (
+                        <TopicChip
+                            key={topic.id ?? topic.name}
+                            name={topic.name}
+                            icon={TOPIC_ICONS[i % TOPIC_ICONS.length]}
+                            index={i}
+                            onClick={() => navigate('/browse')}
+                        />
+                    ))}
+                </div>
+            )}
 
             <CardLayout title="Featured">
                 {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
@@ -121,6 +167,15 @@ function HomePage() {
                     />
                 ))}
             </CardLayout>
+
+            {spotlightScholar && (
+                <div className="mt-8">
+                    <ScholarSpotlightCard
+                        scholar={spotlightScholar}
+                        episodeCount={scholarEpisodeCounts[spotlightScholar.id] ?? 0}
+                    />
+                </div>
+            )}
 
             <CardLayout title="Continue Listening">
                 {historyLoading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}

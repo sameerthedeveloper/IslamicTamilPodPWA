@@ -10,10 +10,22 @@ import FullPlayerSheet from '../components/FullPlayerSheet'
 import QuranAudioEngine from '../components/QuranAudioEngine'
 import QuranMiniPlayer from '../components/QuranMiniPlayer'
 import QuranFullPlayerSheet from '../components/QuranFullPlayerSheet'
+import { usePlayerStore } from '../store/playerStore'
+import { useQuranStore } from '../store/quranStore'
+import { useActivePlayerStore } from '../store/activePlayerStore'
 
 function AppLayout() {
   const { pathname } = useLocation()
   const isQuran = pathname === '/quran'
+
+  // Mirrors the visibility logic in MiniPlayer/QuranMiniPlayer — when one
+  // of them is docked, scrollable content needs extra bottom padding or
+  // its last row ends up hidden behind the floating bar (rather than
+  // scrolled past it).
+  const hasEpisode = usePlayerStore((s) => !!s.currentEpisode)
+  const hasSurah = useQuranStore((s) => !!s.currentSurah)
+  const active = useActivePlayerStore((s) => s.active)
+  const miniPlayerDocked = !isQuran && ((hasEpisode && active !== 'quran') || (hasSurah && active !== 'episode'))
 
   return (
     <div
@@ -32,7 +44,8 @@ function AppLayout() {
       <Sidebar />
       <TopBar />
 
-      <main className="flex-1 overflow-y-auto pt-[calc(5rem+env(safe-area-inset-top))] pb-[calc(6rem+env(safe-area-inset-bottom))] sm:mx-auto sm:w-full sm:max-w-lg sm:border-x sm:border-[var(--border)] lg:mx-0 lg:max-w-none lg:border-x-0 lg:pt-8 lg:pb-28 lg:pl-64">
+      <main
+        className={`flex-1 overflow-y-auto pt-[calc(5rem+env(safe-area-inset-top))] ${miniPlayerDocked ? 'pb-[calc(11rem+env(safe-area-inset-bottom))]' : 'pb-[calc(6rem+env(safe-area-inset-bottom))]'} sm:mx-auto sm:w-full sm:max-w-lg sm:border-x sm:border-[var(--border)] lg:mx-0 lg:max-w-none lg:border-x-0 lg:pt-8 lg:pb-28 lg:pl-64`}>
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             <motion.div

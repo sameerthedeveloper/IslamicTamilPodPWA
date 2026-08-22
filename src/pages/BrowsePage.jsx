@@ -1,14 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Search, Mic, BookOpen, GraduationCap, Users, Compass, X } from 'lucide-react'
-import { getTopics, getEpisodesByTopic, search as searchApi } from '../api/client'
+import { getTopics, getEpisodesByTopic, getScholars, search as searchApi } from '../api/client'
 import TitleCard from '../components/Card/TitleCard'
 import ListCard from '../components/Card/ListCard'
+import TopicCard from '../components/Card/TopicCard'
+import ScholarCard from '../components/Card/ScholarCard'
+import ScholarListRow from '../components/Card/ScholarListRow'
 import { useIncrementalReveal } from '../hooks/useIncrementalReveal'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const ICONS = [Mic, BookOpen, GraduationCap, Users]
 
-function ScholarSeriesRow({ item }) {
+// Series results have nowhere to go yet (no series detail page), so they
+// stay a plain, non-interactive row — scholars get the real ScholarListRow.
+function SeriesRow({ item }) {
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div
@@ -27,6 +32,7 @@ function ScholarSeriesRow({ item }) {
 
 function BrowsePage() {
     const [topics, setTopics] = useState([])
+    const [scholars, setScholars] = useState([])
     const [query, setQuery] = useState('')
     const [results, setResults] = useState(null)
     const [searching, setSearching] = useState(false)
@@ -38,6 +44,9 @@ function BrowsePage() {
         getTopics()
             .then((data) => setTopics(Array.isArray(data) ? data : (data?.data ?? [])))
             .catch(() => setTopics([]))
+        getScholars()
+            .then(setScholars)
+            .catch(() => setScholars([]))
     }, [])
 
     useEffect(() => {
@@ -139,8 +148,10 @@ function BrowsePage() {
 
                     {!searching && otherResults.length > 0 && (
                         <div className="mt-3 flex flex-col gap-2">
-                            {otherResults.map((r) => (
-                                <ScholarSeriesRow key={`${r.type}-${r.id}`} item={r} />
+                            {otherResults.map((r, i) => (
+                                r.type === 'scholar'
+                                    ? <ScholarListRow key={`${r.type}-${r.id}`} scholar={r} index={i} />
+                                    : <SeriesRow key={`${r.type}-${r.id}`} item={r} />
                             ))}
                         </div>
                     )}
@@ -165,38 +176,42 @@ function BrowsePage() {
                         </div>
                     )}
 
-                    {topics.map((topic, i) => {
-                        const Icon = ICONS[i % ICONS.length]
-                        const active = activeTopic === topic.name
-                        return (
-                            <motion.button
-                                key={topic.id ?? topic.name}
-                                onClick={() => selectTopic(topic.name)}
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                whileHover={{ y: -3 }}
-                                whileTap={{ scale: 0.98 }}
-                                transition={{ duration: 0.35, delay: Math.min(i, 8) * 0.05, ease: [0.16, 1, 0.3, 1] }}
-                                className="rounded-2xl border p-4 text-left shadow-sm transition-shadow duration-200 hover:shadow-md"
-                                style={{
-                                    borderColor: active ? 'var(--accent)' : '#e5e7eb',
-                                    background: active ? 'var(--accent-soft)' : 'white',
-                                }}>
+                    {topics.map((topic, i) => (
+                        <TopicCard
+                            key={topic.id ?? topic.name}
+                            name={topic.name}
+                            icon={ICONS[i % ICONS.length]}
+                            active={activeTopic === topic.name}
+                            index={i}
+                            onClick={() => selectTopic(topic.name)}
+                        />
+                    ))}
 
-                                <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl"
-                                    style={{ background: active ? 'white' : 'var(--accent-soft)' }}
-                                >
-                                    <Icon size={18} style={{ color: 'var(--accent)' }} />
-                                </div>
+                </div>
 
-                                <p className="mt-3 font-medium text-gray-900">
-                                    {topic.name}
-                                </p>
+            </div>
 
-                            </motion.button>
-                        )
-                    })}
+            <div className="mt-8">
+
+                <div className="flex items-center gap-2.5">
+                    <span className="h-4 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+                    <h2 className="font-display text-xl font-semibold text-gray-900">
+                        Browse by scholar
+                    </h2>
+                </div>
+
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+
+                    {scholars.length === 0 && (
+                        <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                            <Users size={18} style={{ color: 'var(--muted)' }} />
+                            <p className="text-sm text-gray-500">No scholars yet.</p>
+                        </div>
+                    )}
+
+                    {scholars.map((s, i) => (
+                        <ScholarCard key={s.id} scholar={s} index={i} shrink />
+                    ))}
 
                 </div>
 

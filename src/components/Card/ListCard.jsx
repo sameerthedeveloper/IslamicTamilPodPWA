@@ -1,13 +1,23 @@
 import { motion } from 'framer-motion'
 import { Play } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { usePlayerStore } from '../../store/playerStore'
 import BookmarkButton from '../BookmarkButton'
 import { cardEntrance, cardHover } from '../../lib/motion'
+import { useImageFallback } from '../../hooks/useImageFallback'
 
 function ListCard({ title, image, scholarName, thumbnail, episode, queue, index = 0 }) {
+  const navigate = useNavigate()
   const play = usePlayerStore((s) => s.play)
+  const { failed, onError } = useImageFallback()
+  const showImage = thumbnail && !failed
 
   const handleClick = () => {
+    if (episode) navigate(`/episode/${episode.id}`)
+  }
+
+  const handlePlay = (e) => {
+    e.stopPropagation()
     if (episode) play(episode, queue)
   }
 
@@ -20,8 +30,8 @@ function ListCard({ title, image, scholarName, thumbnail, episode, queue, index 
       <div
         className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200"
         style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--base))' }}>
-        {thumbnail ? (
-          <img src={thumbnail} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        {showImage ? (
+          <img src={thumbnail} alt={title} loading="lazy" decoding="async" onError={onError} className="h-full w-full object-cover" />
         ) : (
           <span className="font-display text-lg font-semibold" style={{ color: 'var(--accent)' }}>{image}</span>
         )}
@@ -36,11 +46,13 @@ function ListCard({ title, image, scholarName, thumbnail, episode, queue, index 
 
       <div className="flex shrink-0 items-center gap-1">
         <BookmarkButton episode={episode} size={13} className="h-8 w-8" />
-        <span
-          className="flex h-8 w-8 items-center justify-center rounded-full"
+        <button
+          onClick={handlePlay}
+          aria-label="Play episode"
+          className="flex h-8 w-8 items-center justify-center rounded-full transition active:scale-90"
           style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
           <Play size={13} fill="currentColor" />
-        </span>
+        </button>
       </div>
     </motion.div>
   )

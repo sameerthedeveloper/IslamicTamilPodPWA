@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion'
-import { usePlayerStore } from '../../store/playerStore'
+import { useNavigate } from 'react-router-dom'
 import BookmarkButton from '../BookmarkButton'
 import { cardEntrance, cardHover } from '../../lib/motion'
+import { useImageFallback } from '../../hooks/useImageFallback'
 
-function TitleCard({ title, image, scholarName, thumbnail, episode, queue, index = 0 }) {
-  const play = usePlayerStore((s) => s.play)
+function TitleCard({ title, image, scholarName, thumbnail, episode, index = 0 }) {
+  const navigate = useNavigate()
+  const { failed, onError } = useImageFallback()
+  const showImage = thumbnail && !failed
 
   const handleClick = () => {
-    if (episode) play(episode, queue)
+    if (episode) navigate(`/episode/${episode.id}`)
   }
 
   return (
@@ -19,8 +22,8 @@ function TitleCard({ title, image, scholarName, thumbnail, episode, queue, index
       <div
         className="relative flex flex-1 items-center justify-center rounded-xl border border-gray-200 overflow-hidden"
         style={{ background: 'linear-gradient(160deg, var(--accent-soft), var(--base))' }}>
-        {thumbnail ? (
-          <img src={thumbnail} alt={title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        {showImage ? (
+          <img src={thumbnail} alt={title} loading="lazy" decoding="async" onError={onError} className="h-full w-full object-cover" />
         ) : (
           <span className="font-display text-3xl font-semibold" style={{ color: 'var(--accent)' }}>{image}</span>
         )}

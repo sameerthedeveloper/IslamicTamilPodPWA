@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:abdul-basith": "node scripts/seedAbdulBasithEpisodes.js",
-    "seed:tamildawah": "node scripts/seedTamilDawahEpisodes.js"
+    "seed:tamildawah": "node scripts/seedTamilDawahEpisodes.js",
+    "seed:speaker-images": "node scripts/applySpeakerImages.js",
+    "wipe:content": "node scripts/wipeContentData.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

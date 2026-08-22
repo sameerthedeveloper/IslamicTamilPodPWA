@@ -7,6 +7,21 @@ import {
 import { usePlayerStore } from '../store/playerStore'
 import BookmarkButton from './BookmarkButton'
 import EqualizerBars from './EqualizerBars'
+import { useImageFallback } from '../hooks/useImageFallback'
+
+// Keyed by episode id where it's used below, so a broken image on one
+// episode doesn't stick around as the fallback for the next one.
+function Artwork({ thumbnail, title }) {
+  const { failed, onError } = useImageFallback()
+  if (thumbnail && !failed) {
+    return <img src={thumbnail} alt="" onError={onError} className="absolute inset-0 h-full w-full object-cover" />
+  }
+  return (
+    <span className="font-display relative text-7xl font-semibold text-white/90">
+      {title?.[0] ?? 'I'}
+    </span>
+  )
+}
 
 const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75]
 const SLEEP_OPTIONS = [15, 30, 45, 60]
@@ -123,49 +138,25 @@ function FullPlayerSheet() {
       <main className="flex flex-1 flex-col items-center justify-center px-8 pb-[calc(2.5rem+env(safe-area-inset-bottom))] overflow-y-auto">
 
         <div
-          className={`relative flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl shadow-[0_20px_50px_-12px_rgba(11,92,85,0.45)] transition-shadow duration-500 ${isPlaying ? 'animate-glow-pulse' : ''}`}
-          style={{ background: 'linear-gradient(160deg, #0F2E29 0%, #081B18 55%, #050F0D 100%)' }}>
+          className={`relative flex aspect-square w-full max-w-sm shrink-0 items-center justify-center overflow-hidden rounded-3xl transition-[box-shadow] duration-500 ${isPlaying ? 'animate-medallion-glow' : 'shadow-[0_20px_50px_-12px_rgba(11,92,85,0.45)]'}`}
+          style={{ background: 'linear-gradient(160deg, #0F2E29 0%, #081B18 55%, #050F0D 100%)', border: '3px solid var(--gold)' }}>
 
           <div className="pattern-star pointer-events-none absolute inset-0 opacity-[0.08]" />
 
-          {currentEpisode.thumbnail ? (
-            <img src={currentEpisode.thumbnail} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
-          ) : null}
+          {/* Full portrait, shown as-is — no crop, no dark wash. A gold
+              frame around the whole card (like a manuscript folio border)
+              does the "this is artwork" work instead of an overlay that
+              would obscure the photo itself. */}
+          <Artwork key={currentEpisode.id} thumbnail={currentEpisode.thumbnail} title={currentEpisode.title} />
 
-          {/* Dark vignette so any thumbnail (or none) still reads as one
-              cinematic dark card, matching the poster-style artwork the
-              lecture channel itself publishes. */}
+          {/* Crescent + star, a small pinned accent rather than a wash
+              over the whole photo. */}
           <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: 'linear-gradient(165deg, rgba(5,15,13,0.35) 0%, rgba(5,15,13,0.55) 45%, rgba(5,15,13,0.92) 100%)' }}
-          />
-
-          {/* Crescent + star flourish, top-right — a quiet Islamic motif
-              rather than a literal moon-phase indicator. */}
-          <div className="absolute right-5 top-5 flex items-center gap-1" style={{ color: 'var(--gold)' }}>
-            <Moon size={20} fill="currentColor" strokeWidth={0} />
-            <Star size={9} fill="currentColor" strokeWidth={0} className="-ml-1 mt-2" />
+            className="absolute right-3 top-3 flex items-center gap-1 rounded-full px-2.5 py-1.5"
+            style={{ background: 'rgba(5,15,13,0.55)', backdropFilter: 'blur(4px)', color: 'var(--gold)' }}>
+            <Moon size={14} fill="currentColor" strokeWidth={0} />
+            <Star size={6} fill="currentColor" strokeWidth={0} className="-ml-0.5 mt-1" />
           </div>
-
-          {!currentEpisode.thumbnail && (
-            <span className="font-display relative text-7xl font-semibold text-white/90">
-              {currentEpisode.title?.[0] ?? 'I'}
-            </span>
-          )}
-
-          {/* Soft glowing streak across the bottom, echoing the reference
-              artwork's light-trail flourish. */}
-          <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full opacity-70" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="fp-streak" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity="0" />
-                <stop offset="50%" stopColor="#5EEAD4" stopOpacity="0.8" />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-              </linearGradient>
-              <filter id="fp-blur"><feGaussianBlur stdDeviation="2.5" /></filter>
-            </defs>
-            <path d="M -20 70 C 100 20, 250 90, 420 30" fill="none" stroke="url(#fp-streak)" strokeWidth="2" filter="url(#fp-blur)" />
-          </svg>
         </div>
 
         <div className="mt-10 flex w-full max-w-sm items-start justify-between gap-3">

@@ -3,6 +3,28 @@ import { Play, Pause, FastForwardIcon, RewindIcon } from 'lucide-react'
 import { usePlayerStore } from '../store/playerStore'
 import { useActivePlayerStore } from '../store/activePlayerStore'
 import EqualizerBars from './EqualizerBars'
+import { useImageFallback } from '../hooks/useImageFallback'
+
+// Keyed by episode id from the parent (see usage below) so the fallback
+// resets per episode instead of sticking after the first broken image.
+function MiniArtwork({ thumbnail, title, isPlaying }) {
+    const { failed, onError } = useImageFallback()
+    const showImage = thumbnail && !failed
+    return (
+        <div
+            className={`font-display flex size-15 shrink-0 items-center justify-center rounded-2xl text-lg font-semibold text-white overflow-hidden transition-shadow duration-300 ${isPlaying ? 'animate-glow-pulse' : ''}`}
+            style={{
+                background: 'linear-gradient(155deg, var(--accent), #0B5C55)',
+                border: showImage ? '2px solid var(--gold)' : '1px solid rgba(184,147,74,0.4)',
+            }}>
+            {showImage ? (
+                <img src={thumbnail} alt="" decoding="async" onError={onError} className="h-full w-full object-cover" />
+            ) : (
+                title?.[0] ?? 'I'
+            )}
+        </div>
+    )
+}
 
 function MiniPlayer() {
     const currentEpisode = usePlayerStore((s) => s.currentEpisode)
@@ -46,15 +68,7 @@ function MiniPlayer() {
                 className="flex min-w-0 items-center gap-3 cursor-pointer">
 
 
-                <div
-                    className={`font-display flex size-15 shrink-0 items-center justify-center rounded-3xl border border-gray-400 text-lg font-semibold text-white overflow-hidden transition-shadow duration-300 ${isPlaying ? 'animate-glow-pulse' : ''}`}
-                    style={{ background: 'linear-gradient(155deg, var(--accent), #0B5C55)' }}>
-                    {currentEpisode.thumbnail ? (
-                        <img src={currentEpisode.thumbnail} alt="" decoding="async" className="h-full w-full object-cover" />
-                    ) : (
-                        currentEpisode.title?.[0] ?? 'I'
-                    )}
-                </div>
+                <MiniArtwork key={currentEpisode.id} thumbnail={currentEpisode.thumbnail} title={currentEpisode.title} isPlaying={isPlaying} />
 
 
 
